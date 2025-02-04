@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "erikg"
+  site-url: "https://erikgaas.github.io/erikg"
+  description: "My personal site"
+  repo-branch: main
+  repo-url: "https://github.com/erikgaas/erikg"
