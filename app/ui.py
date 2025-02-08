@@ -4,86 +4,49 @@ from fasthtml.svg import *
 from datetime import datetime
 
 def LoginButton():
-    return Button(
-        DivLAligned(
-            UkIcon('log-in', height=16, width=16, cls="mr-2"), 
-            "Sign In", 
-            cls="px-4 py-2"
-        ),
-        cls=(
-            ButtonT.ghost, "hover:bg-muted", "hover:text-primary",
-            "transition-colors duration-200", "border border-border/50", "rounded-full","min-w-[100px]")
+    return Button(cls=(ButtonT.ghost, "hover:bg-muted", "hover:text-primary","transition-colors duration-200", "border border-border/50", "rounded-full","min-w-[100px]"))(
+        DivLAligned(UkIcon('log-in', height=16, width=16, cls="mr-2"),  "Sign In",  cls="px-4 py-2"),
     )
 
 def MobileMenu(nav_items):
-    return Modal(
-        NavContainer(*nav_items, cls="space-y-4"),
-        id="mobile-menu",
-        cls="uk-modal-full",
-        dialog_cls="uk-modal-dialog uk-margin-remove-top"  # Align to top
-    )
+    return Modal(id="mobile-menu", cls="uk-modal-full", dialog_cls="uk-modal-dialog uk-margin-remove-top")(NavContainer(*nav_items, cls="space-y-4"))
 
 def ErikNavBar():
     login_btn = LoginButton()
-    theme_toggle = Button(
-        Div(
-            Div(UkIcon('sun', height=16, width=16), cls="absolute dark:hidden"),
-            Div(UkIcon('moon', height=16, width=16), cls="absolute hidden dark:block"),
-            cls="relative w-4 h-4" 
-        ),
-        cls=ButtonT.secondary,
-        uk_toggle="target: html; cls: dark"
-    )
+    sun_icon, moon_icon = UkIcon('sun', height=16, width=16), UkIcon('moon', height=16, width=16)
+    icon_group = Div(cls="relative w-4 h-4")(Div(sun_icon, cls="absolute dark:hidden"), Div(moon_icon, cls="absolute hidden dark:block"))
+    theme_toggle = Button(cls=ButtonT.secondary, uk_toggle="target: html; cls: dark")(icon_group)
     
-    social_icons = DivHStacked(
+    social_icons = DivHStacked(cls="space-x-4 hidden sm:flex")(
         UkIconLink('github', href="https://github.com/erikgaas", height=20),
         UkIconLink('linkedin', href="https://www.linkedin.com/in/erikgaas/", height=20),
-        UkIconLink('twitter', href="https://x.com/erikgaas", height=20),
-        cls="space-x-4 hidden sm:flex"
+        UkIconLink('twitter', href="https://x.com/erikgaas", height=20),  
     )
     
-    nav_items = [
-        Li(A("About", href="/")),
-        Li(A("Projects", href="/projects")),
-        Li(A("Blog", href="/blogposts")),
-        Li(A("Contact"), uk_toggle="target: #contact-modal")
-    ]
     
+    nav_items = [Li(A("About", href="/")), Li(A("Projects", href="/projects")), Li(A("Blog", href="/blogposts")), Li(A("Contact"), uk_toggle="target: #contact-modal")]
     mobile_menu = Button(UkIcon('menu', height=24, width=24), cls=(ButtonT.ghost, "sm:hidden"), uk_toggle="target: #mobile-menu")
     
-    return Div(
-        NavBarContainer(
-            NavBarLSide(A(H3("Erik Gaasedelen", cls="mr-6"), href="/"), NavBarNav(*nav_items, cls="hidden sm:flex")),
-            NavBarRSide(social_icons, theme_toggle, login_btn, mobile_menu, cls="space-x-4"),
-            cls="border-b border-border px-4 py-2"
-        ),
-        MobileMenu(nav_items)
-    )
+    left_nav = NavBarLSide(A(H3("Erik Gaasedelen", cls="mr-6"), href="/"), NavBarNav(*nav_items, cls="hidden sm:flex"))
+    right_nav = NavBarRSide(social_icons, theme_toggle, login_btn, mobile_menu, cls="space-x-4")
+
+    return Div(NavBarContainer(left_nav, right_nav, cls="border-b border-border px-4 py-2"), MobileMenu(nav_items))
 
 
 def HeroSection():
     def SocialButton(icon, href, text):
-        return A(
-            DivLAligned(
-                UkIcon(icon, height=24, width=24, cls="mr-3"), 
-                text, 
-                cls="px-2"
-            ),
-            href=href,
-            cls=(ButtonT.secondary, "py-3 w-full sm:w-auto inline-flex")  # Added inline-flex for proper alignment
-    )
+        return A(href=href, cls=(ButtonT.secondary, "py-3 w-full sm:w-auto inline-flex"))(
+            DivLAligned(UkIcon(icon, height=24, width=24, cls="mr-3"), text, cls="px-2")
+        )
+    
+    social_icons = [("github", "https://github.com/erikgaas", "GitHub"), ("linkedin", "https://www.linkedin.com/in/erikgaas", "LinkedIn"), ("file-text", "#", "Resume")]
+    social_buttons = [SocialButton(icon, href, text) for icon, href, text in social_icons]
 
-    social_buttons = Div(  # Changed to Div for better mobile control
-        SocialButton("github", "https://github.com/erikgaas", "GitHub"),
-        SocialButton("linkedin", "https://www.linkedin.com/in/erikgaas", "LinkedIn"),
-        SocialButton("file-text", "#", "Resume"),
-        cls="space-y-3 sm:space-y-0 sm:flex sm:space-x-6 w-full"  # Stack vertically on mobile
-    )
+    social_buttons = Div(*social_buttons,cls="space-y-3 sm:space-y-0 sm:flex sm:space-x-6 w-full")
 
     name = H1("Erik Gaasedelen", cls=TextT.bold + TextT.primary + "text-center sm:text-left")
     title = P("Senior Engineering Manager", cls=TextT.lg + TextT.muted + "text-center sm:text-left")
-    about = P("""Fullstack, Deep Learning, Autonomous Vehicles, Med Tech. Trying to make hard problems easier.""",
-                  cls=TextT.muted + "text-center sm:text-left")
+    about = P("""Fullstack, Deep Learning, Autonomous Vehicles, Med Tech. Trying to make hard problems easier.""", cls=TextT.muted + "text-center sm:text-left")
     
     contact_button = Button(
         DivLAligned(UkIcon("mail", height=24, width=24, cls="mr-3"),"Get in touch", cls="px-4"),
@@ -141,9 +104,11 @@ def BlogCard(blog):
     return Card(image_section, content_section, cls=(CardT.hover + CardT.secondary, "max-w-sm"))
 
 def HomeSectionHeader(title, description, button_text, button_href):
-    view_all_btn = Button(
-        DivLAligned(button_text, UkIcon("arrow-right", height=16, width=16), cls="px-4 py-2"),
-        cls=(ButtonT.secondary, "hover:shadow-md", "transition-all duration-200", "border border-border", "min-w-[160px]"))
+    view_all_btn = A(DivLAligned(button_text, UkIcon("arrow-right", height=16, width=16), cls="px-4 py-2"),
+        href=button_href,
+        cls=(ButtonT.secondary, "hover:shadow-md", "transition-all duration-200", 
+             "border border-border", "min-w-[160px]", "inline-flex")
+    )
 
     header = DivFullySpaced(
         Div(
@@ -363,12 +328,7 @@ def BlogToolbar(tags, active_tag=None, sort_by="newest"):
         cls="flex-grow sm:flex-grow-0"
     )
     
-    sort_options = [
-        ("newest", "Newest First"),
-        ("oldest", "Oldest First"),
-        ("popular", "Most Popular"),
-        ("updated", "Recently Updated")
-    ]
+    sort_options = [("newest", "Newest First"), ("oldest", "Oldest First"), ("popular", "Most Popular"), ("updated", "Recently Updated")]
     
     sort_dropdown = UkSelect(
         *[Option(label, value=value, selected=(value==sort_by))
@@ -399,8 +359,7 @@ def BlogToolbar(tags, active_tag=None, sort_by="newest"):
 def BlogPage(blogs):
     # Extract unique tags from all blogs
     all_tags = set()
-    for blog in blogs:
-        all_tags.update(tag.strip() for tag in blog.tags.split(','))
+    for blog in blogs: all_tags.update(tag.strip() for tag in blog.tags.split(','))
     
     header = DivFullySpaced(
         Div(
