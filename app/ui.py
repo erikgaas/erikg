@@ -49,11 +49,7 @@ def ErikNavBar():
         Li(A("Contact"), uk_toggle="target: #contact-modal")
     ]
     
-    mobile_menu = Button(
-        UkIcon('menu', height=24, width=24),
-        cls=(ButtonT.ghost, "sm:hidden"),
-        uk_toggle="target: #mobile-menu"
-    )
+    mobile_menu = Button(UkIcon('menu', height=24, width=24), cls=(ButtonT.ghost, "sm:hidden"), uk_toggle="target: #mobile-menu")
     
     return Div(
         NavBarContainer(
@@ -67,15 +63,15 @@ def ErikNavBar():
 
 def HeroSection():
     def SocialButton(icon, href, text):
-        return Button(
+        return A(
             DivLAligned(
                 UkIcon(icon, height=24, width=24, cls="mr-3"), 
-                text,
+                text, 
                 cls="px-2"
             ),
-            cls=(ButtonT.secondary, "py-3 w-full sm:w-auto"),  # Full width on mobile
-            href=href
-        )
+            href=href,
+            cls=(ButtonT.secondary, "py-3 w-full sm:w-auto inline-flex")  # Added inline-flex for proper alignment
+    )
 
     social_buttons = Div(  # Changed to Div for better mobile control
         SocialButton("github", "https://github.com/erikgaas", "GitHub"),
@@ -84,35 +80,29 @@ def HeroSection():
         cls="space-y-3 sm:space-y-0 sm:flex sm:space-x-6 w-full"  # Stack vertically on mobile
     )
 
+    name = H1("Erik Gaasedelen", cls=TextT.bold + TextT.primary + "text-center sm:text-left")
+    title = P("Senior Engineering Manager", cls=TextT.lg + TextT.muted + "text-center sm:text-left")
+    about = P("""Fullstack, Deep Learning, Autonomous Vehicles, Med Tech. Trying to make hard problems easier.""",
+                  cls=TextT.muted + "text-center sm:text-left")
+    
+    contact_button = Button(
+        DivLAligned(UkIcon("mail", height=24, width=24, cls="mr-3"),"Get in touch", cls="px-4"),
+        cls=(ButtonT.primary, "py-3 w-full sm:w-auto sm:min-w-[180px] mt-3 sm:mt-0", "text-lg"),
+        uk_toggle="target: #contact-modal"
+    )
+
     return Card(
         Div(  # Wrapper div with flex column on mobile, row on desktop
             Div(  # Profile image container
                 Img(
-                    src="https://picsum.photos/400/400?random=1",
+                    src="static/github_profile.png",
                     alt="Profile Picture",
                     cls="rounded-full w-32 h-32 sm:w-48 sm:h-48 object-cover shadow-lg mx-auto sm:mx-0"  # Centered on mobile
                 ),
                 cls="mb-6 sm:mb-0 sm:mr-8"
             ),
-            Div(  # Content container
-                H1("Erik Gaasedelen", cls=TextT.bold + TextT.primary + "text-center sm:text-left"),
-                P("Senior Engineering Manager", cls=TextT.lg + TextT.muted + "text-center sm:text-left"),
-                P("""Fullstack, Deep Learning, Autonomous Vehicles, Med Tech. Trying to make hard problems easier.""",
-                  cls=TextT.muted + "text-center sm:text-left"),
-                DividerSplit(),
-                Div(  # Button container
-                    social_buttons,
-                    Button(
-                        DivLAligned(
-                            UkIcon("mail", height=24, width=24, cls="mr-3"),
-                            "Get in touch",
-                            cls="px-4", 
-                        ),
-                        cls=(ButtonT.primary, "py-3 w-full sm:w-auto sm:min-w-[180px] mt-3 sm:mt-0", "text-lg"),
-                        uk_toggle="target: #contact-modal"
-                    ),
-                    cls="flex flex-col sm:flex-row sm:justify-between items-center space-y-3 sm:space-y-0"
-                ),
+            Div(name, title, about, DividerSplit(),
+                Div(social_buttons, contact_button, cls="flex flex-col sm:flex-row sm:justify-between items-center space-y-3 sm:space-y-0"),
                 cls='space-y-4'
             ),
             cls="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left"
