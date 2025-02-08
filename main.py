@@ -33,4 +33,8 @@ def blogs():
 def projects():
     return ListProjects()
 
+@rt("/blogposts/sample-post")
+def blogpost():
+    return BlogPostPage()
+
 serve()

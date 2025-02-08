@@ -567,6 +567,183 @@ more_sample_projects = sample_projects + [
     )
 ]
 
+def TableOfContents(sections):
+    def create_toc_link(text, id):
+        return Li(A(text, href=f"#{id}"), cls=TextPresets.muted_sm)
+    
+    return Div(
+        H4("Table of Contents", cls=TextPresets.muted_sm),
+        NavContainer(
+            *[create_toc_link(text, id) for text, id in sections],
+            uk_scrollspy_nav="closest: li; scroll: true; offset: 100",
+            sticky="offset: 100",
+            cls=(NavT.primary, "space-y-2 p-4 rounded-lg border border-border w-64")
+        ),
+        cls="hidden [@media(min-width:1340px)]:block fixed top-24",
+        style="left: max(40px, calc((100vw - 768px) / 2 - 280px))"
+    )
+
+# Let's create a sample blog post to demonstrate
+def BlogPost():
+    # Sample sections for our blog
+    sections = [
+        ("Introduction", "introduction"),
+        ("Background", "background"),
+        ("Methodology", "methodology"),
+        ("Results", "results"),
+        ("Discussion", "discussion"),
+        ("Conclusion", "conclusion")
+    ]
+    
+    # Create the content sections
+    def create_section(title, id):
+        return Section(
+            H2(title, cls=(TextT.bold, "text-2xl mb-4")),
+            P("Lorem ipsum dolor sit amet, consectetur adipiscing elit. " * 10),
+            P("Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. " * 10),
+            id=id,
+            cls="mb-12"
+        )
+    
+    content = Div(*[create_section(title, id) for title, id in sections],
+                  cls="prose max-w-none") # prose class for better typography
+    
+    # Create the layout with TOC on the left and content on the right
+    return Div(
+        TableOfContents(sections),
+        content,
+        cls="container mx-auto max-w-3xl px-4 py-8 relative"  # Narrower max-width to allow space for TOC
+    )
+
+def estimate_read_time(text, words_per_minute=200):
+    """Estimate reading time in minutes"""
+    word_count = len(text.split())
+    minutes = max(1, round(word_count / words_per_minute))
+    return f"{minutes} min read"
+
+def BlogPostHeader(post):
+    return Section(
+        # Tags
+        Div(*[Label(tag.strip(), cls=LabelT.secondary) for tag in post.tags.split(',')],
+            cls="flex flex-wrap gap-2 mb-4"),
+        
+        # Title
+        H1(post.title, cls=(TextT.bold, "text-4xl mb-6")),
+        
+        # Author and metadata
+        DivLAligned(
+            # Author info
+            DivLAligned(
+                DiceBearAvatar(post.author_name, h=10, w=10),
+                Div(
+                    P(post.author_name, cls=TextPresets.bold_sm),
+                    P(post.created_at, cls=TextPresets.muted_sm)
+                ),
+                cls="gap-3"
+            ),
+            
+            # Reading time and views
+            DivLAligned(
+                DivHStacked(UkIcon("clock", height=16), 
+                           P(estimate_read_time(post.content), cls=TextPresets.muted_sm)),
+                DivHStacked(UkIcon("eye", height=16), 
+                           P(f"{post.views} views", cls=TextPresets.muted_sm)),
+                cls="gap-4"
+            ),
+            cls="justify-between items-center"
+        ),
+        
+        # Share buttons
+        Div(
+            H4("Share this post", cls=TextPresets.bold_sm),
+            DivHStacked(
+                *[Button(UkIcon(icon), cls=ButtonT.ghost) 
+                  for icon in ["twitter", "linkedin", "facebook", "link"]],
+                cls="gap-2"
+            ),
+            cls="mt-6"
+        ),
+        
+        DividerSplit(),
+        cls="mb-8"
+    )
+
+def BlogPostNavigation(prev_post=None, next_post=None):
+    return Section(
+        DividerSplit(),
+        DivFullySpaced(
+            # Previous post
+            Div(cls="flex-1") if not prev_post else (
+                A(DivLAligned(
+                    UkIcon("arrow-left", height=20),
+                    Div(
+                        P("Previous", cls=TextPresets.muted_sm),
+                        P(prev_post.title, cls=TextPresets.bold_sm)
+                    ),
+                    cls="gap-2"
+                ), href=f"/blog/{prev_post.url_slug}")
+            ),
+            
+            # Back to posts
+            Button(
+                DivLAligned(UkIcon("list"), "All posts"),
+                href="/blog",
+                cls=ButtonT.secondary
+            ),
+            
+            # Next post
+            Div(cls="flex-1") if not next_post else (
+                A(DivRAligned(
+                    Div(
+                        P("Next", cls=TextPresets.muted_sm),
+                        P(next_post.title, cls=TextPresets.bold_sm),
+                        cls="text-right"
+                    ),
+                    UkIcon("arrow-right", height=20),
+                    cls="gap-2"
+                ), href=f"/blog/{next_post.url_slug}")
+            ),
+        ),
+        cls="mt-12"
+    )
+
+def FullBlogPost():
+    # Sample post data
+    post = SimpleNamespace(
+        title="Building a Personal Website with MonsterUI",
+        author_name="Erik Gaasedelen",
+        created_at="July 24, 2024",
+        content="Lorem ipsum " * 1000,  # Long content for scrolling
+        views=142,
+        tags="python,web-development,tutorial",
+        url_slug="building-personal-website-monsterui"
+    )
+    
+    # Sample navigation posts
+    prev_post = SimpleNamespace(
+        title="Introduction to FastAPI",
+        url_slug="intro-to-fastapi"
+    )
+    next_post = SimpleNamespace(
+        title="Advanced Python Tips",
+        url_slug="advanced-python-tips"
+    )
+    
+    sections = [
+        ("Introduction", "introduction"),
+        ("Getting Started", "getting-started"),
+        ("Core Concepts", "core-concepts"),
+        ("Advanced Features", "advanced-features"),
+        ("Best Practices", "best-practices"),
+        ("Conclusion", "conclusion")
+    ]
+    
+    return Div(
+        BlogPostHeader(post),
+        BlogPost(),  # Reusing our previous BlogPost component
+        BlogPostNavigation(prev_post, next_post),
+        cls="container mx-auto max-w-3xl px-4 py-8"
+    )
 
 def CommonScreen(*c):
     return Div(
@@ -589,3 +766,6 @@ def ListBlogs():
 
 def ListProjects():
     return CommonScreen(ProjectPage(sample_projects))
+
+def BlogPostPage():
+    return CommonScreen(FullBlogPost())
