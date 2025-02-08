@@ -22,12 +22,11 @@ def ErikNavBar():
         UkIconLink('linkedin', href="https://www.linkedin.com/in/erikgaas/", height=20),
         UkIconLink('twitter', href="https://x.com/erikgaas", height=20),  
     )
-    
-    
+
     nav_items = [Li(A("About", href="/")), Li(A("Projects", href="/projects")), Li(A("Blog", href="/blogposts")), Li(A("Contact"), uk_toggle="target: #contact-modal")]
     mobile_menu = Button(UkIcon('menu', height=24, width=24), cls=(ButtonT.ghost, "sm:hidden"), uk_toggle="target: #mobile-menu")
-    
-    left_nav = NavBarLSide(A(H3("Erik Gaasedelen", cls="mr-6"), href="/"), NavBarNav(*nav_items, cls="hidden sm:flex"))
+
+    left_nav  = NavBarLSide(A(H3("Erik Gaasedelen", cls="mr-6"), href="/"), NavBarNav(*nav_items, cls="hidden sm:flex"))
     right_nav = NavBarRSide(social_icons, theme_toggle, login_btn, mobile_menu, cls="space-x-4")
 
     return Div(NavBarContainer(left_nav, right_nav, cls="border-b border-border px-4 py-2"), MobileMenu(nav_items))
@@ -41,56 +40,30 @@ def HeroSection():
     
     social_icons = [("github", "https://github.com/erikgaas", "GitHub"), ("linkedin", "https://www.linkedin.com/in/erikgaas", "LinkedIn"), ("file-text", "#", "Resume")]
     social_buttons = [SocialButton(icon, href, text) for icon, href, text in social_icons]
-
     social_buttons = Div(*social_buttons,cls="space-y-3 sm:space-y-0 sm:flex sm:space-x-6 w-full")
-
     name = H1("Erik Gaasedelen", cls=TextT.bold + TextT.primary + "text-center sm:text-left")
     title = P("Senior Engineering Manager", cls=TextT.lg + TextT.muted + "text-center sm:text-left")
     about = P("""Fullstack, Deep Learning, Autonomous Vehicles, Med Tech. Trying to make hard problems easier.""", cls=TextT.muted + "text-center sm:text-left")
-    
-    contact_button = Button(
-        DivLAligned(UkIcon("mail", height=24, width=24, cls="mr-3"),"Get in touch", cls="px-4"),
-        cls=(ButtonT.primary, "py-3 w-full sm:w-auto sm:min-w-[180px] mt-3 sm:mt-0", "text-lg"),
-        uk_toggle="target: #contact-modal"
+    contact = DivLAligned(UkIcon("mail", height=24, width=24, cls="mr-3"),"Get in touch", cls="px-4")
+    contact_button = Button(uk_toggle="target: #contact-modal", cls=(ButtonT.primary, "py-3 w-full sm:w-auto sm:min-w-[180px] mt-3 sm:mt-0", "text-lg"))(contact)
+    erik_image = Img(src="static/github_profile.png", alt="Profile Picture", cls="rounded-full w-32 h-32 sm:w-48 sm:h-48 object-cover shadow-lg mx-auto sm:mx-0")
+
+    return Card(cls=(CardT.secondary, "mt-8 mx-auto max-w-4xl p-8"))(
+        Div(Div(erik_image, cls="mb-6 sm:mb-0 sm:mr-8"), Div(name, title, about, DividerSplit(),
+            Div(social_buttons, contact_button, cls="flex flex-col sm:flex-row sm:justify-between items-center space-y-3 sm:space-y-0"), cls='space-y-4'),
+            cls="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left")
     )
-
-    return Card(
-        Div(  # Wrapper div with flex column on mobile, row on desktop
-            Div(  # Profile image container
-                Img(
-                    src="static/github_profile.png",
-                    alt="Profile Picture",
-                    cls="rounded-full w-32 h-32 sm:w-48 sm:h-48 object-cover shadow-lg mx-auto sm:mx-0"  # Centered on mobile
-                ),
-                cls="mb-6 sm:mb-0 sm:mr-8"
-            ),
-            Div(name, title, about, DividerSplit(),
-                Div(social_buttons, contact_button, cls="flex flex-col sm:flex-row sm:justify-between items-center space-y-3 sm:space-y-0"),
-                cls='space-y-4'
-            ),
-            cls="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left"
-        ),
-        cls=(CardT.secondary, "mt-8 mx-auto max-w-4xl p-8"))
-
 
 
 def BlogCard(blog):
     """Create a preview card for a single blog post"""
     image_section = Div(cls="relative")(Img(src=blog.image_url, alt=blog.title, cls="object-cover w-full h-48"))
-    metadata = DivLAligned(cls="space-x-4")(
-                            DivHStacked(
-                                UkIcon("calendar", height=16, width=16),
-                                P(blog.created_at, cls=TextPresets.muted_sm),
-                                cls="space-x-2"
-                            ),
-                            DivHStacked(cls="space-x-2")(UkIcon("eye", height=16, width=16),
-                                                        P(f"{blog.views} views", cls=TextPresets.muted_sm))
-    )
-    
+    published = DivHStacked(UkIcon("calendar", height=16, width=16), P(blog.created_at, cls=TextPresets.muted_sm), cls="space-x-2")
+    views = DivHStacked(UkIcon("eye", height=16, width=16), P(f"{blog.views} views", cls=TextPresets.muted_sm), cls="space-x-2")
+    metadata = DivLAligned(cls="space-x-4")(published, views)
     title_section = Div(cls="space-y-2")(H3(blog.title, cls=TextT.bold), metadata)
     description = P(blog.description, cls=TextPresets.muted_sm)
-    tags = Div(cls="flex flex-wrap gap-2")(*[Label(tag.strip(), cls=LabelT.secondary) 
-                                            for tag in blog.tags.split(',') if tag.strip()])
+    tags = Div(cls="flex flex-wrap gap-2")(*[Label(tag.strip(), cls=LabelT.secondary) for tag in blog.tags.split(',') if tag.strip()])
     
     read_more = A(
         DivLAligned(
@@ -293,15 +266,9 @@ sample_projects = [
 ]
 
 def Footer():
-    social_links = [
-        ("github", "https://github.com/erikgaas"),
-        ("linkedin", "https://www.linkedin.com/in/erikgaas"),
-        ("twitter", "https://x.com/erikgaas"),
-    ]
-    
+    social_links = [("github", "https://github.com/erikgaas"), ("linkedin", "https://www.linkedin.com/in/erikgaas"), ("twitter", "https://x.com/erikgaas"),]
     social_icons = DivHStacked(
-        *[UkIconLink(icon, href=url, height=20, cls="text-gray-300 hover:text-primary transition-colors")
-          for icon, url in social_links],
+        *[UkIconLink(icon, href=url, height=20, cls="text-gray-300 hover:text-primary transition-colors")for icon, url in social_links],
         cls="space-x-6"
     )
     
@@ -357,7 +324,6 @@ def BlogToolbar(tags, active_tag=None, sort_by="newest"):
 
 
 def BlogPage(blogs):
-    # Extract unique tags from all blogs
     all_tags = set()
     for blog in blogs: all_tags.update(tag.strip() for tag in blog.tags.split(','))
     
@@ -370,11 +336,7 @@ def BlogPage(blogs):
     )
     
     toolbar = BlogToolbar(sorted(all_tags))
-    
-    # Updated grid to match home page layout
-    blog_grid = Div(
-        cls="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 justify-items-center"
-    )(*[BlogCard(blog) for blog in blogs])
+    blog_grid = Div(cls="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 justify-items-center")(*[BlogCard(blog) for blog in blogs])
 
     pagination = DivHStacked(
         Button(UkIcon("chevron-left"), cls=ButtonT.ghost),
