@@ -29,4 +29,8 @@ def index():
 def blogs():
     return ListBlogs()
 
+@rt("/projects")
+def projects():
+    return ListProjects()
+
 serve()

@@ -15,6 +15,14 @@ def LoginButton():
             "transition-colors duration-200", "border border-border/50", "rounded-full","min-w-[100px]")
     )
 
+def MobileMenu(nav_items):
+    return Modal(
+        NavContainer(*nav_items, cls="space-y-4"),
+        id="mobile-menu",
+        cls="uk-modal-full",
+        dialog_cls="uk-modal-dialog uk-margin-remove-top"  # Align to top
+    )
+
 def ErikNavBar():
     login_btn = LoginButton()
     theme_toggle = Button(
@@ -36,7 +44,7 @@ def ErikNavBar():
     
     nav_items = [
         Li(A("About", href="/")),
-        Li(A("Projects", href="#")),
+        Li(A("Projects", href="/projects")),
         Li(A("Blog", href="/blogposts")),
         Li(A("Contact"), uk_toggle="target: #contact-modal")
     ]
@@ -44,7 +52,7 @@ def ErikNavBar():
     mobile_menu = Button(
         UkIcon('menu', height=24, width=24),
         cls=(ButtonT.ghost, "sm:hidden"),
-        uk_toggle="target: #mobile-menu; animation: uk-animation-fade" 
+        uk_toggle="target: #mobile-menu"
     )
     
     return Div(
@@ -53,11 +61,7 @@ def ErikNavBar():
             NavBarRSide(social_icons, theme_toggle, login_btn, mobile_menu, cls="space-x-4"),
             cls="border-b border-border px-4 py-2"
         ),
-        Div(
-            NavContainer(*nav_items, cls="space-y-2"), 
-            id="mobile-menu", 
-            cls="hidden sm:hidden p-4 border-b border-border bg-background"
-        )
+        MobileMenu(nav_items)
     )
 
 
@@ -163,7 +167,7 @@ def HomeSectionHeader(title, description, button_text, button_href):
 
 def LatestBlogs(blogs):
     """Create a section displaying the latest blog posts"""
-    header = HomeSectionHeader("Latest Posts", "Check out my latest thoughts and tutorials", "View all posts", "/blog")    
+    header = HomeSectionHeader("Latest Posts", "Check out my latest thoughts and tutorials", "View all posts", "/blogposts")    
     blog_grid = Div(cls="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 justify-items-center")(
         *[BlogCard(blog) for blog in blogs]
     )
@@ -434,6 +438,135 @@ def BlogPage(blogs):
 
     return Div(header, toolbar, blog_grid, pagination, cls="container mx-auto max-w-6xl px-4 py-8 space-y-8")
 
+def ProjectToolbar(tags, statuses, active_tag=None, active_status=None, sort_by="newest"):
+    search_input = Div(
+        Input(
+            placeholder="Search projects...",
+            cls="w-full sm:w-[300px] bg-secondary border-border text-secondary-foreground hover:bg-secondary/80 focus:bg-secondary/80",
+            uk_icon="icon: search"
+        ),
+        cls="flex-grow sm:flex-grow-0"
+    )
+    
+    sort_options = [
+        ("newest", "Newest First"),
+        ("oldest", "Oldest First"),
+        ("updated", "Recently Updated"),
+        ("featured", "Featured First")
+    ]
+    
+    sort_dropdown = UkSelect(
+        *[Option(label, value=value, selected=(value==sort_by))
+          for value, label in sort_options],
+        cls="w-[200px]",
+        placeholder="Sort by"
+    )
+
+    status_filters = Div(cls="flex flex-wrap gap-2")(
+        *[Button(
+            DivLAligned(
+                status.title(),
+                cls="px-2 py-1"
+            ),
+            cls=(
+                ButtonT.ghost,
+                "rounded-full text-sm",
+                "bg-primary text-white" if status == active_status else ""
+            )
+        ) for status in statuses]
+    )
+    
+    tag_filters = Div(cls="flex flex-wrap gap-2")(
+        *[Button(
+            tag,
+            cls=(
+                ButtonT.ghost,
+                "rounded-full text-sm py-1 px-3",
+                "bg-primary text-white" if tag == active_tag else ""
+            )
+        ) for tag in tags]
+    )
+    
+    return Div(
+        DivFullySpaced(search_input, sort_dropdown, cls="flex-wrap gap-4"),
+        Div(
+            H4("Status", cls=TextPresets.bold_sm),
+            status_filters,
+            cls="space-y-2"
+        ),
+        Div(
+            H4("Technologies", cls=TextPresets.bold_sm),
+            tag_filters,
+            cls="space-y-2"
+        ),
+        cls="space-y-6 mb-8"
+    )
+
+def ProjectPage(projects):
+    # Extract unique tags and statuses from all projects
+    all_tags = set()
+    all_statuses = set()
+    for project in projects:
+        all_tags.update(tag.strip() for tag in project.tags.split(','))
+        all_statuses.add(project.status)
+    
+    header = DivFullySpaced(
+        Div(
+            H1("Projects", cls=(TextT.bold + TextT.primary, "text-3xl")),
+            P("A showcase of my work and experiments", cls=TextPresets.muted_sm),
+            cls="space-y-2"
+        ),
+        Button(
+            DivLAligned(
+                UkIcon("plus-circle", height=20, width=20, cls="mr-2"),
+                "New Project"
+            ),
+            cls=ButtonT.primary,
+            uk_toggle="target: #new-project-modal"
+        )
+    )
+    
+    toolbar = ProjectToolbar(sorted(all_tags), sorted(all_statuses))
+    
+    project_grid = Div(
+        cls="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 justify-items-center"
+    )(*[ProjectCard(project) for project in projects])
+
+    pagination = DivHStacked(
+        Button(UkIcon("chevron-left"), cls=ButtonT.ghost),
+        Button("1", cls=(ButtonT.primary, "mx-1")),
+        Button("2", cls=(ButtonT.ghost, "mx-1")),
+        Button("3", cls=(ButtonT.ghost, "mx-1")),
+        Button(UkIcon("chevron-right"), cls=ButtonT.ghost),
+        cls="mt-8 justify-center space-x-2"
+    )
+
+    return Div(header, toolbar, project_grid, pagination, 
+              cls="container mx-auto max-w-6xl px-4 py-8 space-y-8")
+
+more_sample_projects = sample_projects + [
+    SimpleNamespace(
+        title="Personal Finance Dashboard",
+        description="Interactive dashboard for tracking personal finances and investments.",
+        image_url="https://picsum.photos/800/400?random=7",
+        project_url="https://github.com/username/finance-dash",
+        github_url="https://github.com/username/finance-dash",
+        status="in-progress",
+        featured=False,
+        tags="python,react,finance"
+    ),
+    SimpleNamespace(
+        title="Smart Home Controller",
+        description="IoT system for managing home automation devices.",
+        image_url="https://picsum.photos/800/400?random=8",
+        project_url="https://github.com/username/smart-home",
+        github_url="https://github.com/username/smart-home",
+        status="archived",
+        featured=False,
+        tags="python,iot,raspberry-pi"
+    )
+]
+
 
 def CommonScreen(*c):
     return Div(
@@ -453,3 +586,6 @@ def Home():
     
 def ListBlogs():
     return CommonScreen(BlogPage(sample_blogs))
+
+def ListProjects():
+    return CommonScreen(ProjectPage(sample_projects))
