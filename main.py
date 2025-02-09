@@ -2,6 +2,7 @@ from fasthtml.common import *
 from fasthtml.oauth import OAuth, GitHubAppClient
 from monsterui.all import *
 from app.ui import *
+from app.api import sign_in
 import os
 import dotenv
 
@@ -28,7 +29,7 @@ client = GitHubAppClient(os.getenv("GITHUB_CLIENT_ID"),
 
 class Auth(OAuth):
     def get_auth(self, info, ident, session, state):
-        print(info, ident, session, state)
+        sign_in(info)
         return RedirectResponse('/', status_code=303)
 
 app, rt = fast_app(hdrs=hdrs)

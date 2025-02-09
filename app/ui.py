@@ -3,6 +3,8 @@ from fasthtml.common import *
 from fasthtml.svg import *
 from datetime import datetime
 
+from app.api import get_user
+
 def LoginButton():
     return A(href="/login")(
         Button(cls=(ButtonT.ghost, "hover:bg-muted", "hover:text-primary","transition-colors duration-200", "border border-border/50", "rounded-full","min-w-[100px]"))(
@@ -10,16 +12,69 @@ def LoginButton():
         )
     )
 
-def ProfileButton(auth):
-    return A(href="/profile")(Button(cls=(ButtonT.ghost, "hover:bg-muted", "hover:text-primary","transition-colors duration-200", "border border-border/50", "rounded-full","min-w-[100px]"))(
-        DivLAligned(UkIcon('user', height=16, width=16, cls="mr-2"),  "Profile",  cls="px-4 py-2"),
-    ))
+def ProfileDropdown(user):
+    """Create a profile dropdown button with user info and options"""
+    
+    # Create dropdown menu items with icons and hotkeys
+    dropdown_items = [
+        # ("Profile", "user", "⇧⌘P"),
+        # ("Settings", "settings", "⌘S"),
+        ("Logout", "log-out", "", "/logout")
+    ]
+    def DropdownItem(text, icon, hotkey="", onclick=""):
+        return NavCloseLi(A(
+            DivFullySpaced(
+                DivLAligned(
+                    UkIcon(icon, height=16, width=16, cls="mr-2"),
+                    text
+                ),
+                P(hotkey, cls=TextPresets.muted_sm) if hotkey else None
+            ), 
+            onclick=f"window.location.href='{onclick}'",  # Use JavaScript to handle navigation
+            cls="hover:text-primary transition-colors cursor-pointer"  # Added cursor-pointer to show it's clickable
+        ), cls="list-none")
+    
+    # Main button with user info
+    button = Button(
+        DivLAligned(
+            # User avatar (using DiceBearAvatar or user's GitHub avatar)
+            Img(src=user.avatar_url or DiceBearAvatar(user.display_name, 8, 8), 
+                alt="Profile", 
+                cls="w-8 h-8 rounded-full mr-2"),
+            # User name
+            P(user.display_name, cls=TextPresets.md_weight_muted),
+            # Dropdown chevron
+            UkIcon('chevron-down', height=16, width=16, cls="ml-2"),
+            cls="px-4 py-2"
+        ),
+        cls=(ButtonT.ghost, 
+             "hover:bg-muted", 
+             "hover:text-primary",
+             "transition-colors duration-200", 
+             "border border-border/50", 
+             "rounded-full",
+             "min-w-[100px]")
+    )
+    
+    # Create the dropdown menu
+    dropdown = DropDownNavContainer(
+        # User info header
+        NavHeaderLi(
+            P(user.display_name, cls=TextPresets.bold_sm),
+            NavSubtitle(user.email, ),
+         cls="list-none"),
+        NavDividerLi(cls="list-none"),
+        # Menu items
+        *[DropdownItem(text, icon, hotkey, href) for text, icon, hotkey, href in dropdown_items], 
+    )
+    
+    return Div(button, dropdown)
 
 def MobileMenu(nav_items):
     return Modal(id="mobile-menu", cls="uk-modal-full", dialog_cls="uk-modal-dialog uk-margin-remove-top")(NavContainer(*nav_items, cls="space-y-4"))
 
-def ErikNavBar(auth=None):
-    login_btn = LoginButton() if auth is None else ProfileButton(auth)
+def ErikNavBar(user=None):
+    login_btn = LoginButton() if user is None else ProfileDropdown(user)
     sun_icon, moon_icon = UkIcon('sun', height=16, width=16), UkIcon('moon', height=16, width=16)
     icon_group = Div(cls="relative w-4 h-4")(Div(sun_icon, cls="absolute dark:hidden"), Div(moon_icon, cls="absolute hidden dark:block"))
     theme_toggle = Button(cls=ButtonT.secondary, uk_toggle="target: html; cls: dark")(icon_group)
@@ -684,8 +739,9 @@ def LoginScreen(oauth_url):
 
 
 def CommonScreen(*c, auth=None):
+    user = get_user(auth)
     return Div(
-        ErikNavBar(auth=auth),
+        ErikNavBar(user=user),
         *c,
         ContactModal(),
         Footer(),
