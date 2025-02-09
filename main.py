@@ -57,4 +57,8 @@ def blogpost(auth):
 def login(req, auth):
     return LoginPage(oauth_url=oauth.login_link(req), auth=auth)
 
+@rt("/tos")
+def tos(auth):
+    return TermsOfServicePage(auth=auth)
+
 serve()

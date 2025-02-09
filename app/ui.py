@@ -30,8 +30,8 @@ def ProfileDropdown(user):
                 ),
                 P(hotkey, cls=TextPresets.muted_sm) if hotkey else None
             ), 
-            onclick=f"window.location.href='{onclick}'",  # Use JavaScript to handle navigation
-            cls="hover:text-primary transition-colors cursor-pointer"  # Added cursor-pointer to show it's clickable
+            onclick=f"window.location.href='{onclick}'",
+            cls="hover:text-primary transition-colors cursor-pointer"
         ), cls="list-none")
     
     # Main button with user info
@@ -690,7 +690,7 @@ def LoginScreen(oauth_url):
 
     footer = Div(
         P("By continuing, you agree to our ",
-          A("Terms of Service", href="/terms", 
+          A("Terms of Service", href="/tos", 
             cls=(AT.muted, "hover:text-primary transition-colors")),
           " and ",
           A("Privacy Policy", href="/privacy", 
@@ -737,6 +737,69 @@ def LoginScreen(oauth_url):
         cls=f"container mx-auto px-4 {page_background}"
     )
 
+def TermsOfService():
+    return Div(cls="container mx-auto max-w-3xl px-4 py-8 prose dark:prose-invert")(
+        H1("Terms of Service"),
+        
+        Section(
+            H2("1. Agreement to Terms"),
+            P("""By accessing and using this website (erikgaasedelen.com), you accept and agree to be bound by the terms and 
+               provisions of this agreement.""")
+        ),
+        
+        Section(
+            H2("2. User Accounts"),
+            P("""To access certain features of the site, you may be required to sign in using GitHub OAuth. You are responsible for:"""),
+            Ul(
+                Li("Maintaining the confidentiality of your account"),
+                Li("All activities that occur under your account"),
+                Li("Ensuring your GitHub account information is accurate")
+            )
+        ),
+        
+        Section(
+            H2("3. Content and Conduct"),
+            P("""Users may post comments and interact with blog posts. You retain ownership of your content, but grant us a license to use, 
+               display, and distribute it on the site. You agree not to:"""),
+            Ul(
+                Li("Post illegal, harmful, or offensive content"),
+                Li("Spam or abuse site features"),
+                Li("Attempt to disrupt the site's functionality"),
+                Li("Impersonate others or misrepresent your identity")
+            )
+        ),
+        
+        Section(
+            H2("4. Intellectual Property"),
+            P("""The site content, features, and functionality are owned by Erik Gaasedelen and are protected by copyright and other 
+               intellectual property laws.""")
+        ),
+        
+        Section(
+            H2("5. Third-Party Services"),
+            P("""This site uses GitHub for authentication and may include links to third-party websites. We are not responsible for 
+               third-party content or privacy practices.""")
+        ),
+        
+        Section(
+            H2("6. Limitation of Liability"),
+            P("""The site is provided 'as is' without warranties of any kind. We are not liable for any damages arising from 
+               your use of the site.""")
+        ),
+        
+        Section(
+            H2("7. Changes to Terms"),
+            P("""We reserve the right to modify these terms at any time. Users will be notified of significant changes.""")
+        ),
+        
+        Section(
+            H2("8. Contact Information"),
+            P("""If you have questions about these terms, please contact us through the site's contact form.""")
+        ),
+        
+        P(f"Last updated: {datetime.now().strftime('%B %d, %Y')}", cls=TextPresets.muted_sm)
+    )
+
 
 def CommonScreen(*c, auth=None):
     user = get_user(auth)
@@ -767,3 +830,7 @@ def BlogPostPage(auth=None):
 
 def LoginPage(oauth_url, auth=None):
     return CommonScreen(LoginScreen(oauth_url), auth=auth)
+
+def TermsOfServicePage(auth=None):
+    return CommonScreen(TermsOfService(), auth=auth)
+
