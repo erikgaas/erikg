@@ -1,5 +1,5 @@
 from fasthtml.common import *
-from fasthtml.oauth import OAuth, GitHubAppClient
+from fasthtml.oauth import OAuth, GitHubAppClient, http_patterns, url_match
 from monsterui.all import *
 from app.ui import *
 from app.api import sign_in
@@ -28,6 +28,34 @@ client = GitHubAppClient(os.getenv("GITHUB_CLIENT_ID"),
                          os.getenv("GITHUB_CLIENT_SECRET"))
 
 class Auth(OAuth):
+    def __init__(self, app, cli, skip=None, redir_path='/redirect', error_path='/error', logout_path='/logout', login_path='/login', https=True, http_patterns=http_patterns):
+        if not skip: skip = [redir_path,error_path,login_path]
+        store_attr()
+        def before(req, session):
+            auth = req.scope['auth'] = session.get('auth')
+            if not auth: return
+            res = self.check_invalid(req, session, auth)
+            if res: return res
+        app.before.append(Beforeware(before, skip=skip))
+
+        @app.get(redir_path)
+        def redirect(req, session, code:str=None, error:str=None, state:str=None):
+            if not code: session['oauth_error']=error; return RedirectResponse(self.error_path, status_code=303)
+            scheme = 'http' if url_match(req.url,self.http_patterns) or not self.https else 'https'
+            base_url = f"{scheme}://{req.url.netloc}"
+            info = AttrDictDefault(cli.retr_info(code, base_url+redir_path))
+            ident = info.get(self.cli.id_key)
+            if not ident: return self.redir_login(session)
+            res = self.get_auth(info, ident, session, state)
+            if not res:   return self.redir_login(session)
+            req.scope['auth'] = session['auth'] = ident
+            return res
+
+        @app.get(logout_path)
+        def logout(session):
+            session.pop('auth', None)
+            return self.logout(session)
+        
     def get_auth(self, info, ident, session, state):
         sign_in(info)
         return RedirectResponse('/', status_code=303)
@@ -50,7 +78,7 @@ def projects(auth):
     return ListProjects(auth=auth)
 
 @rt("/blogposts/sample-post")
-def blogpost(auth):
+def blogpost():
     return BlogPostPage()
 
 @rt("/login")
