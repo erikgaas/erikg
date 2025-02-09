@@ -16,7 +16,7 @@ def ErikNavBar():
     sun_icon, moon_icon = UkIcon('sun', height=16, width=16), UkIcon('moon', height=16, width=16)
     icon_group = Div(cls="relative w-4 h-4")(Div(sun_icon, cls="absolute dark:hidden"), Div(moon_icon, cls="absolute hidden dark:block"))
     theme_toggle = Button(cls=ButtonT.secondary, uk_toggle="target: html; cls: dark")(icon_group)
-    
+
     social_icons = DivHStacked(cls="space-x-4 hidden sm:flex")(
         UkIconLink('github', href="https://github.com/erikgaas", height=20),
         UkIconLink('linkedin', href="https://www.linkedin.com/in/erikgaas/", height=20),
@@ -48,11 +48,12 @@ def HeroSection():
     contact_button = Button(uk_toggle="target: #contact-modal", cls=(ButtonT.primary, "py-3 w-full sm:w-auto sm:min-w-[180px] mt-3 sm:mt-0", "text-lg"))(contact)
     erik_image = Img(src="static/github_profile.png", alt="Profile Picture", cls="rounded-full w-32 h-32 sm:w-48 sm:h-48 object-cover shadow-lg mx-auto sm:mx-0")
 
+    profile_pic = Div(erik_image, cls="mb-6 sm:mb-0 sm:mr-8")
+    footer_buttons = Div(social_buttons, contact_button, cls="flex flex-col sm:flex-row sm:justify-between items-center space-y-3 sm:space-y-0")
+    profile_info = Div(name, title, about, DividerSplit(), footer_buttons, cls='space-y-4')
+
     return Card(cls=(CardT.secondary, "mt-8 mx-auto max-w-4xl p-8"))(
-        Div(Div(erik_image, cls="mb-6 sm:mb-0 sm:mr-8"), Div(name, title, about, DividerSplit(),
-            Div(social_buttons, contact_button, cls="flex flex-col sm:flex-row sm:justify-between items-center space-y-3 sm:space-y-0"), cls='space-y-4'),
-            cls="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left")
-    )
+        Div(profile_pic, profile_info, cls="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left"))
 
 
 def BlogCard(blog):
@@ -64,14 +65,8 @@ def BlogCard(blog):
     title_section = Div(cls="space-y-2")(H3(blog.title, cls=TextT.bold), metadata)
     description = P(blog.description, cls=TextPresets.muted_sm)
     tags = Div(cls="flex flex-wrap gap-2")(*[Label(tag.strip(), cls=LabelT.secondary) for tag in blog.tags.split(',') if tag.strip()])
-    
-    read_more = A(
-        DivLAligned(
-            "Read more",
-            UkIcon("arrow-right", height=16, width=16, cls="ml-2"),
-        ),
-        href=f"/blog/{blog.url_slug}",
-        cls=(AT.muted, TextPresets.bold_sm)
+    read_more = A(href=f"/blog/{blog.url_slug}", cls=(AT.muted, TextPresets.bold_sm))(
+        DivLAligned("Read more", UkIcon("arrow-right", height=16, width=16, cls="ml-2"))
     )
     content_section = Div(title_section, description, tags, read_more, cls="space-y-4 p-6")
     return Card(image_section, content_section, cls=(CardT.hover + CardT.secondary, "max-w-sm"))
@@ -84,11 +79,7 @@ def HomeSectionHeader(title, description, button_text, button_href):
     )
 
     header = DivFullySpaced(
-        Div(
-            H2(title, cls=(TextT.bold, "text-2xl")),
-            P(description, cls=(TextPresets.muted_sm, "mt-2")),
-            cls="space-y-1"
-        ),
+        Div(H2(title, cls=(TextT.bold, "text-2xl")), P(description, cls=(TextPresets.muted_sm, "mt-2")), cls="space-y-1"),
         view_all_btn, cls="items-center"
     )
     return header
@@ -96,9 +87,7 @@ def HomeSectionHeader(title, description, button_text, button_href):
 def LatestBlogs(blogs):
     """Create a section displaying the latest blog posts"""
     header = HomeSectionHeader("Latest Posts", "Check out my latest thoughts and tutorials", "View all posts", "/blogposts")    
-    blog_grid = Div(cls="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 justify-items-center")(
-        *[BlogCard(blog) for blog in blogs]
-    )
+    blog_grid = Div(cls="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 justify-items-center")(*[BlogCard(blog) for blog in blogs])
     return Section(header, blog_grid, cls="mt-16 mx-auto max-w-6xl px-4")
 
 # Let's create some sample blog posts
@@ -133,9 +122,7 @@ sample_blogs = [
 ]
 
 def ContactModal():
-    modal_header = DivLAligned(
-            UkIcon("mail", height=24, width=24, cls="text-primary mr-3"), H3("Get in Touch", cls=TextT.bold)
-        )
+    modal_header = DivLAligned(UkIcon("mail", height=24, width=24, cls="text-primary mr-3"), H3("Get in Touch", cls=TextT.bold))
 
     alert = Alert(
         DivLAligned(
@@ -148,14 +135,9 @@ def ContactModal():
         cls=(AlertT.info, "mb-6")
     )
 
-    name_input = Div(
-        LabelInput("Name", id="name",  placeholder="Your name", icon="user",uk_tooltip="Please enter your full name")
-    )
-
+    name_input = Div(LabelInput("Name", id="name",  placeholder="Your name", icon="user",uk_tooltip="Please enter your full name"))
     email_input = Div(
-        LabelInput("Email", id="email", type="email", placeholder="your.email@example.com", icon="mail",
-                   uk_tooltip="I'll use this to respond to your message"
-        )
+        LabelInput("Email", id="email", type="email", placeholder="your.email@example.com", icon="mail", uk_tooltip="I'll use this to respond to your message")
     )
 
     message_input = Div(
@@ -168,20 +150,11 @@ def ContactModal():
     subscribe_checkbox = Div(
         LabelCheckboxX(
             "Keep me updated about new blog posts and projects", 
-            id="subscribe", 
-            cls="text-sm",
-            input_cls="bg-primary hover:bg-primary-focus border-primary"  # Added primary color classes
-        )
+            id="subscribe", cls="text-sm", input_cls="bg-primary hover:bg-primary-focus border-primary")
     )
 
-    cancel_button = Button(
-        DivLAligned(
-            UkIcon("x", height=20, width=20, cls="mr-2"), 
-            "Cancel",
-            cls="px-4"
-        ),
-        cls=(ButtonT.secondary, "py-3 min-w-[120px]"), 
-        uk_toggle="target: #contact-modal"
+    cancel_button = Button(cls=(ButtonT.secondary, "py-3 min-w-[120px]"), uk_toggle="target: #contact-modal")(
+        DivLAligned(UkIcon("x", height=20, width=20, cls="mr-2"), "Cancel", cls="px-4")
     )
 
     send_button = Button(
@@ -271,19 +244,9 @@ def Footer():
         *[UkIconLink(icon, href=url, height=20, cls="text-gray-300 hover:text-primary transition-colors")for icon, url in social_links],
         cls="space-x-6"
     )
-    
-    return Section(
-        DivVStacked(
-            DividerSplit(),
-            DivCentered(
-                social_icons,
-                P(f"© {datetime.now().year} Erik Gaasedelen. All rights reserved.", 
-                  cls=TextPresets.muted_sm),
-                cls="space-y-4 py-8"
-            )
-        ),
-        cls="mt-auto"
-    )
+
+    copyright = P(f"© {datetime.now().year} Erik Gaasedelen. All rights reserved.", cls=TextPresets.muted_sm)
+    return Section(DivVStacked(DividerSplit(), DivCentered(social_icons, copyright, cls="space-y-4 py-8")), cls="mt-auto")
 
 def BlogToolbar(tags, active_tag=None, sort_by="newest"):
     search_input = Div(
@@ -303,24 +266,11 @@ def BlogToolbar(tags, active_tag=None, sort_by="newest"):
         cls="w-[200px]",
         placeholder="Sort by"
     )
+
+    def TagButton(tag): return Button(tag, cls=(ButtonT.ghost, "rounded-full text-sm py-1 px-3", "bg-primary text-white" if tag == active_tag else ""))
+    tag_filters = Div(cls="flex flex-wrap gap-2")(*[TagButton(tag) for tag in tags])
     
-    # Create tag pills that act as toggleable filters
-    tag_filters = Div(cls="flex flex-wrap gap-2")(
-        *[Button(
-            tag,
-            cls=(
-                ButtonT.ghost,
-                "rounded-full text-sm py-1 px-3",
-                "bg-primary text-white" if tag == active_tag else ""
-            )
-        ) for tag in tags]
-    )
-    
-    return Div(
-        DivFullySpaced(search_input, sort_dropdown, cls="flex-wrap gap-4"),
-        tag_filters,
-        cls="space-y-4 mb-8"
-    )
+    return Div(DivFullySpaced(search_input, sort_dropdown, cls="flex-wrap gap-4"), tag_filters, cls="space-y-4 mb-8")
 
 
 def BlogPage(blogs):
