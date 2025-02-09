@@ -10,11 +10,16 @@ def LoginButton():
         )
     )
 
+def ProfileButton(auth):
+    return A(href="/profile")(Button(cls=(ButtonT.ghost, "hover:bg-muted", "hover:text-primary","transition-colors duration-200", "border border-border/50", "rounded-full","min-w-[100px]"))(
+        DivLAligned(UkIcon('user', height=16, width=16, cls="mr-2"),  "Profile",  cls="px-4 py-2"),
+    ))
+
 def MobileMenu(nav_items):
     return Modal(id="mobile-menu", cls="uk-modal-full", dialog_cls="uk-modal-dialog uk-margin-remove-top")(NavContainer(*nav_items, cls="space-y-4"))
 
-def ErikNavBar():
-    login_btn = LoginButton()
+def ErikNavBar(auth=None):
+    login_btn = LoginButton() if auth is None else ProfileButton(auth)
     sun_icon, moon_icon = UkIcon('sun', height=16, width=16), UkIcon('moon', height=16, width=16)
     icon_group = Div(cls="relative w-4 h-4")(Div(sun_icon, cls="absolute dark:hidden"), Div(moon_icon, cls="absolute hidden dark:block"))
     theme_toggle = Button(cls=ButtonT.secondary, uk_toggle="target: html; cls: dark")(icon_group)
@@ -587,7 +592,7 @@ def FullBlogPost():
         cls="container mx-auto max-w-3xl px-4 py-8"
     )
 
-def LoginScreen():
+def LoginScreen(oauth_url):
     """Create a more polished login screen with GitHub OAuth"""
     page_background = "bg-gradient-to-b from-background to-secondary/10"
     
@@ -605,7 +610,7 @@ def LoginScreen():
             UkIcon("github", height=24, width=24, cls="mr-3"), 
             "Continue with GitHub",
         ),
-        href="/auth/github/login",
+        href=oauth_url,
         cls=(ButtonT.primary, "w-full inline-flex justify-center hover:opacity-90",
              "transition-all duration-200 transform hover:scale-[1.02]",
              "shadow-md hover:shadow-lg")
@@ -678,30 +683,31 @@ def LoginScreen():
     )
 
 
-def CommonScreen(*c):
+def CommonScreen(*c, auth=None):
     return Div(
-        ErikNavBar(),
+        ErikNavBar(auth=auth),
         *c,
         ContactModal(),
         Footer(),
         cls="min-h-screen bg-background"
     )
 
-def Home():
+def Home(auth=None):
     return CommonScreen(    
         HeroSection(),
         LatestBlogs(sample_blogs),
         ProjectsSection(sample_projects),
+        auth=auth
     )
     
-def ListBlogs():
-    return CommonScreen(BlogPage(sample_blogs))
+def ListBlogs(auth=None):
+    return CommonScreen(BlogPage(sample_blogs), auth=auth)
 
-def ListProjects():
-    return CommonScreen(ProjectPage(sample_projects))
+def ListProjects(auth=None):
+    return CommonScreen(ProjectPage(sample_projects), auth=auth)
 
-def BlogPostPage():
-    return CommonScreen(FullBlogPost())
+def BlogPostPage(auth=None):
+    return CommonScreen(FullBlogPost(), auth=auth)
 
-def LoginPage():
-    return CommonScreen(LoginScreen())
+def LoginPage(oauth_url, auth=None):
+    return CommonScreen(LoginScreen(oauth_url), auth=auth)
