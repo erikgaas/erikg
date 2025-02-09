@@ -37,4 +37,8 @@ def projects():
 def blogpost():
     return BlogPostPage()
 
+@rt("/login")
+def login():
+    return LoginPage()
+
 serve()

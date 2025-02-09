@@ -4,8 +4,10 @@ from fasthtml.svg import *
 from datetime import datetime
 
 def LoginButton():
-    return Button(cls=(ButtonT.ghost, "hover:bg-muted", "hover:text-primary","transition-colors duration-200", "border border-border/50", "rounded-full","min-w-[100px]"))(
-        DivLAligned(UkIcon('log-in', height=16, width=16, cls="mr-2"),  "Sign In",  cls="px-4 py-2"),
+    return A(href="/login")(
+        Button(cls=(ButtonT.ghost, "hover:bg-muted", "hover:text-primary","transition-colors duration-200", "border border-border/50", "rounded-full","min-w-[100px]"))(
+            DivLAligned(UkIcon('log-in', height=16, width=16, cls="mr-2"),  "Sign In",  cls="px-4 py-2"),
+        )
     )
 
 def MobileMenu(nav_items):
@@ -41,8 +43,8 @@ def HeroSection():
     social_icons = [("github", "https://github.com/erikgaas", "GitHub"), ("linkedin", "https://www.linkedin.com/in/erikgaas", "LinkedIn"), ("file-text", "#", "Resume")]
     social_buttons = [SocialButton(icon, href, text) for icon, href, text in social_icons]
     social_buttons = Div(*social_buttons,cls="space-y-3 sm:space-y-0 sm:flex sm:space-x-6 w-full")
-    name = H1("Erik Gaasedelen", cls=TextT.bold + TextT.primary + "text-center sm:text-left")
-    title = P("Senior Engineering Manager", cls=TextT.lg + TextT.muted + "text-center sm:text-left")
+    name = H1("Erik Gaasedelen", cls=TextT.bold + TextT.muted + TextT.primary + "text-center sm:text-left")
+    title = P("Senior Engineering Manager", cls=TextT.lg + TextT.muted + TextT.primary + "text-center sm:text-left")
     about = P("""Fullstack, Deep Learning, Autonomous Vehicles, Med Tech. Trying to make hard problems easier.""", cls=TextT.muted + "text-center sm:text-left")
     contact = DivLAligned(UkIcon("mail", height=24, width=24, cls="mr-3"),"Get in touch", cls="px-4")
     contact_button = Button(uk_toggle="target: #contact-modal", cls=(ButtonT.primary, "py-3 w-full sm:w-auto sm:min-w-[180px] mt-3 sm:mt-0", "text-lg"))(contact)
@@ -79,7 +81,7 @@ def HomeSectionHeader(title, description, button_text, button_href):
     )
 
     header = DivFullySpaced(
-        Div(H2(title, cls=(TextT.bold, "text-2xl")), P(description, cls=(TextPresets.muted_sm, "mt-2")), cls="space-y-1"),
+        Div(H2(title, cls=(TextT.bold, TextT.primary, "text-2xl")), P(description, cls=(TextPresets.muted_sm, "mt-2")), cls="space-y-1"),
         view_all_btn, cls="items-center"
     )
     return header
@@ -148,9 +150,8 @@ def ContactModal():
     )
 
     subscribe_checkbox = Div(
-        LabelCheckboxX(
-            "Keep me updated about new blog posts and projects", 
-            id="subscribe", cls="text-sm", input_cls="bg-primary hover:bg-primary-focus border-primary")
+        LabelCheckboxX("Keep me updated about new blog posts and projects", 
+                        id="subscribe", cls="text-sm", input_cls="bg-primary hover:bg-primary-focus border-primary")
     )
 
     cancel_button = Button(cls=(ButtonT.secondary, "py-3 min-w-[120px]"), uk_toggle="target: #contact-modal")(
@@ -348,19 +349,10 @@ def ProjectToolbar(tags, statuses, active_tag=None, active_status=None, sort_by=
         ) for tag in tags]
     )
     
-    return Div(
+    return Div(cls="space-y-6 mb-8",)(
         DivFullySpaced(search_input, sort_dropdown, cls="flex-wrap gap-4"),
-        Div(
-            H4("Status", cls=TextPresets.bold_sm),
-            status_filters,
-            cls="space-y-2"
-        ),
-        Div(
-            H4("Technologies", cls=TextPresets.bold_sm),
-            tag_filters,
-            cls="space-y-2"
-        ),
-        cls="space-y-6 mb-8"
+        Div(H4("Status", cls=TextPresets.bold_sm), status_filters, cls="space-y-2"),
+        Div(H4("Technologies", cls=TextPresets.bold_sm), tag_filters, cls="space-y-2"),
     )
 
 def ProjectPage(projects):
@@ -402,8 +394,7 @@ def ProjectPage(projects):
         cls="mt-8 justify-center space-x-2"
     )
 
-    return Div(header, toolbar, project_grid, pagination, 
-              cls="container mx-auto max-w-6xl px-4 py-8 space-y-8")
+    return Div(header, toolbar, project_grid, pagination, cls="container mx-auto max-w-6xl px-4 py-8 space-y-8")
 
 more_sample_projects = sample_projects + [
     SimpleNamespace(
@@ -483,6 +474,7 @@ def estimate_read_time(text, words_per_minute=200):
     return f"{minutes} min read"
 
 def BlogPostHeader(post):
+    
     return Section(
         # Tags
         Div(*[Label(tag.strip(), cls=LabelT.secondary) for tag in post.tags.split(',')],
@@ -491,16 +483,10 @@ def BlogPostHeader(post):
         # Title
         H1(post.title, cls=(TextT.bold, "text-4xl mb-6")),
         
-        # Author and metadata
         DivLAligned(
-            # Author info
-            DivLAligned(
+            DivLAligned(cls="gap-3")(
                 DiceBearAvatar(post.author_name, h=10, w=10),
-                Div(
-                    P(post.author_name, cls=TextPresets.bold_sm),
-                    P(post.created_at, cls=TextPresets.muted_sm)
-                ),
-                cls="gap-3"
+                Div(P(post.author_name, cls=TextPresets.bold_sm), P(post.created_at, cls=TextPresets.muted_sm)),
             ),
             
             # Reading time and views
@@ -514,14 +500,9 @@ def BlogPostHeader(post):
             cls="justify-between items-center"
         ),
         
-        # Share buttons
         Div(
             H4("Share this post", cls=TextPresets.bold_sm),
-            DivHStacked(
-                *[Button(UkIcon(icon), cls=ButtonT.ghost) 
-                  for icon in ["twitter", "linkedin", "facebook", "link"]],
-                cls="gap-2"
-            ),
+            DivHStacked(*[Button(UkIcon(icon), cls=ButtonT.ghost) for icon in ["twitter", "linkedin", "facebook", "link"]], cls="gap-2"),
             cls="mt-6"
         ),
         
@@ -606,6 +587,97 @@ def FullBlogPost():
         cls="container mx-auto max-w-3xl px-4 py-8"
     )
 
+def LoginScreen():
+    """Create a more polished login screen with GitHub OAuth"""
+    page_background = "bg-gradient-to-b from-background to-secondary/10"
+    
+    header = DivCentered(
+        # Add a small brand icon above the title
+        UkIcon("code", height=40, width=40, cls="text-primary mb-4"),
+        H2("Welcome", cls=(TextT.bold, TextT.primary, "text-3xl")),
+        P("Sign in to access interactive features and comments", 
+          cls=(TextPresets.muted_sm, "max-w-sm text-center")),
+        cls="space-y-2 mb-8"
+    )
+
+    github_button = A(
+        DivLAligned(cls="px-4 py-3")(
+            UkIcon("github", height=24, width=24, cls="mr-3"), 
+            "Continue with GitHub",
+        ),
+        href="/auth/github/login",
+        cls=(ButtonT.primary, "w-full inline-flex justify-center hover:opacity-90",
+             "transition-all duration-200 transform hover:scale-[1.02]",
+             "shadow-md hover:shadow-lg")
+    )
+
+    info_section = Div(cls="space-y-4 mt-8")(
+        DividerSplit("Why GitHub?", cls="text-primary/70"),
+        Card(
+            DivLAligned(
+                UkIcon("shield", height=16, cls="text-primary"), 
+                P("Secure and simple login process", cls=TextPresets.muted_sm),
+                cls="gap-2"
+            ),
+            DivLAligned(
+                UkIcon("key", height=16, cls="text-primary"), 
+                P("No additional password needed", cls=TextPresets.muted_sm),
+                cls="gap-2"
+            ),
+            cls=(CardT.secondary, "space-y-4 p-4 bg-secondary/50")
+        ),
+    )
+
+    footer = Div(
+        P("By continuing, you agree to our ",
+          A("Terms of Service", href="/terms", 
+            cls=(AT.muted, "hover:text-primary transition-colors")),
+          " and ",
+          A("Privacy Policy", href="/privacy", 
+            cls=(AT.muted, "hover:text-primary transition-colors")),
+          cls=(TextPresets.muted_sm, "text-secondary-foreground/70")),
+        cls="mt-8 text-center"
+    )
+
+    back_link = A(
+        DivLAligned(
+            UkIcon("arrow-left", height=16, cls="mr-2"), 
+            "Back to home",
+            cls="group-hover:transform group-hover:-translate-x-1 transition-transform"
+        ),
+        href="/",
+        cls=(AT.muted, "mt-6 inline-flex hover:text-primary transition-colors group")
+    )
+
+    login_card = Card(
+        header, github_button, info_section, footer,
+        cls=(CardT.secondary, "p-8 w-full max-w-md",
+             "border border-border/50",
+             "shadow-xl hover:shadow-2xl transition-shadow duration-500",
+             "backdrop-blur-sm bg-secondary/50")
+    )
+
+    # Add decorative elements
+    decorative_circle = Div(
+        cls="absolute top-[-120px] right-[-120px] w-64 h-64 rounded-full bg-primary/5 blur-3xl pointer-events-none"
+    )
+    
+    decorative_circle2 = Div(
+        cls="absolute bottom-[-150px] left-[-150px] w-96 h-96 rounded-full bg-primary/5 blur-3xl pointer-events-none"
+    )
+
+    return Div(
+        Div(
+            decorative_circle,
+            decorative_circle2,
+            login_card, 
+            back_link,
+            cls="flex flex-col items-center justify-center min-h-[80vh] relative"
+        ),
+        cls=f"container mx-auto px-4 {page_background}"
+    )
+
+
 def CommonScreen(*c):
     return Div(
         ErikNavBar(),
@@ -630,3 +702,6 @@ def ListProjects():
 
 def BlogPostPage():
     return CommonScreen(FullBlogPost())
+
+def LoginPage():
+    return CommonScreen(LoginScreen())
