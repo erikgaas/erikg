@@ -77,7 +77,54 @@ def ErikNavBar(user=None):
     login_btn = LoginButton() if user is None else ProfileDropdown(user)
     sun_icon, moon_icon = UkIcon('sun', height=16, width=16), UkIcon('moon', height=16, width=16)
     icon_group = Div(cls="relative w-4 h-4")(Div(sun_icon, cls="absolute dark:hidden"), Div(moon_icon, cls="absolute hidden dark:block"))
-    theme_toggle = Button(cls=ButtonT.secondary, uk_toggle="target: html; cls: dark")(icon_group)
+
+    theme_script = Script("""
+            // Check and apply theme on page load
+            function applyTheme() {
+                const html = document.documentElement;
+                const isDark = localStorage.theme === 'dark' || 
+                    (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                
+                // Ensure uk-theme-blue is always present
+                if (!html.classList.contains('uk-theme-blue')) {
+                    html.classList.add('uk-theme-blue');
+                }
+                
+                // Handle dark/light theme
+                if (isDark) {
+                    html.classList.add('dark');
+                } else {
+                    html.classList.remove('dark');
+                }
+            }
+
+            // Apply theme immediately
+            applyTheme();
+
+            // Function to toggle theme
+            function toggleTheme() {
+                const html = document.documentElement;
+                if (html.classList.contains('dark')) {
+                    html.classList.remove('dark');
+                    localStorage.theme = 'light';
+                } else {
+                    html.classList.add('dark');
+                    localStorage.theme = 'dark';
+                }
+                // Ensure uk-theme-blue remains
+                if (!html.classList.contains('uk-theme-blue')) {
+                    html.classList.add('uk-theme-blue');
+                }
+            }
+
+            // Watch system theme changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (!('theme' in localStorage)) {
+                    applyTheme();
+                }
+            });
+        """)
+    theme_toggle = Button(cls=ButtonT.secondary, onclick="toggleTheme()")(icon_group)
 
     social_icons = DivHStacked(cls="space-x-4 hidden sm:flex")(
         UkIconLink('github', href="https://github.com/erikgaas", height=20),
@@ -91,7 +138,7 @@ def ErikNavBar(user=None):
     left_nav  = NavBarLSide(A(H3("Erik Gaasedelen", cls="mr-6"), href="/"), NavBarNav(*nav_items, cls="hidden sm:flex"))
     right_nav = NavBarRSide(social_icons, theme_toggle, login_btn, mobile_menu, cls="space-x-4")
 
-    return Div(NavBarContainer(left_nav, right_nav, cls="border-b border-border px-4 py-2"), MobileMenu(nav_items))
+    return Div(theme_script, NavBarContainer(left_nav, right_nav, cls="border-b border-border px-4 py-2"), MobileMenu(nav_items))
 
 
 def HeroSection():
@@ -105,7 +152,7 @@ def HeroSection():
     social_buttons = Div(*social_buttons,cls="space-y-3 sm:space-y-0 sm:flex sm:space-x-6 w-full")
     name = H1("Erik Gaasedelen", cls=TextT.bold + TextT.muted + TextT.primary + "text-center sm:text-left")
     title = P("Senior Engineering Manager", cls=TextT.lg + TextT.muted + TextT.primary + "text-center sm:text-left")
-    about = P("""Fullstack, Deep Learning, Autonomous Vehicles, Med Tech. Trying to make hard problems easier.""", cls=TextT.muted + "text-center sm:text-left")
+    about = P("""Fullstack, Deep Learning, Autonomous Vehicles, Med Tech. Learn, build, teach. 🔁""", cls=TextT.muted + "text-center sm:text-left")
     contact = DivLAligned(UkIcon("mail", height=24, width=24, cls="mr-3"),"Get in touch", cls="px-4")
     contact_button = Button(uk_toggle="target: #contact-modal", cls=(ButtonT.primary, "py-3 w-full sm:w-auto sm:min-w-[180px] mt-3 sm:mt-0", "text-lg"))(contact)
     erik_image = Img(src="static/github_profile.png", alt="Profile Picture", cls="rounded-full w-32 h-32 sm:w-48 sm:h-48 object-cover shadow-lg mx-auto sm:mx-0")
@@ -800,6 +847,110 @@ def TermsOfService():
         P(f"Last updated: {datetime.now().strftime('%B %d, %Y')}", cls=TextPresets.muted_sm)
     )
 
+def PrivacyPolicy():
+    return Div(cls="container mx-auto max-w-3xl px-4 py-8 prose dark:prose-invert")(
+        H1("Privacy Policy"),
+        P(f"Last Updated: {datetime.now().strftime('%B %d, %Y')}"),
+        
+        Section(
+            H2("1. Information We Collect"),
+            H3("1.1 Information from GitHub Authentication"),
+            P("""When you sign in using GitHub, we receive and store:"""),
+            Ul(
+                Li("Your GitHub username and ID"),
+                Li("Your display name"),
+                Li("Your email address (if public on GitHub)"),
+                Li("Your avatar URL"),
+                Li("Your public GitHub profile information")
+            ),
+            
+            H3("1.2 Information You Provide"),
+            P("""We collect information you actively provide:"""),
+            Ul(
+                Li("Comments on blog posts"),
+                Li("Contact form submissions"),
+                Li("Interaction data with blog content")
+            )
+        ),
+        
+        Section(
+            H2("2. How We Use Your Information"),
+            P("""We use the collected information for:"""),
+            Ul(
+                Li("Authentication and account management"),
+                Li("Displaying your profile information alongside your comments"),
+                Li("Responding to your contact form submissions"),
+                Li("Improving site functionality and content"),
+                Li("Ensuring site security and preventing abuse")
+            )
+        ),
+        
+        Section(
+            H2("3. Data Storage and Security"),
+            P("""We implement reasonable security measures to protect your information:"""),
+            Ul(
+                Li("All data is stored securely in our database"),
+                Li("We use secure HTTPS connections"),
+                Li("Access to personal information is restricted to authorized personnel"),
+                Li("We regularly review our security practices")
+            )
+        ),
+        
+        Section(
+            H2("4. Cookies and Local Storage"),
+            P("""We use:"""),
+            Ul(
+                Li("Session cookies for authentication"),
+                Li("Local storage for theme preferences"),
+                Li("GitHub OAuth cookies for authentication")
+            )
+        ),
+        
+        Section(
+            H2("5. Third-Party Services"),
+            P("""We use the following third-party services:"""),
+            Ul(
+                Li("GitHub (for authentication)"),
+                Li("Any analytics services you use", cls=TextPresets.muted_sm)
+            ),
+            P("""Each third-party service has its own privacy policy and data handling practices.""")
+        ),
+        
+        Section(
+            H2("6. Your Rights"),
+            P("""You have the right to:"""),
+            Ul(
+                Li("Access your personal information"),
+                Li("Request deletion of your account and data"),
+                Li("Opt out of communications"),
+                Li("Request a copy of your data")
+            )
+        ),
+        
+        Section(
+            H2("7. Changes to Privacy Policy"),
+            P("""We may update this privacy policy from time to time. We will notify users of any material changes through:"""),
+            Ul(
+                Li("A notice on our website"),
+                Li("An email to registered users (for significant changes)")
+            )
+        ),
+        
+        Section(
+            H2("8. Contact Information"),
+            P("""If you have questions about this privacy policy or your personal data, please:"""),
+            Ul(
+                Li("Use our contact form"),
+            )
+        ),
+        
+        DividerSplit(),
+        
+        P("""This privacy policy is intended to help you understand what information we collect, 
+           how we use it, and what choices you have regarding your information.""", 
+           cls=TextPresets.muted_sm)
+    )
+
 
 def CommonScreen(*c, auth=None):
     user = get_user(auth)
@@ -834,3 +985,5 @@ def LoginPage(oauth_url, auth=None):
 def TermsOfServicePage(auth=None):
     return CommonScreen(TermsOfService(), auth=auth)
 
+def PrivacyPolicyPage(auth=None):
+    return CommonScreen(PrivacyPolicy(), auth=auth)

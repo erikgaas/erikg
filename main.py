@@ -66,7 +66,6 @@ oauth = Auth(app, client)
 
 @rt
 def index(auth):
-    print(auth)
     return Home(auth=auth)
 
 @rt("/blogposts")
@@ -88,5 +87,9 @@ def login(req, auth):
 @rt("/tos")
 def tos(auth):
     return TermsOfServicePage(auth=auth)
+
+@rt("/privacy")
+def privacy(auth):
+    return PrivacyPolicyPage(auth=auth)
 
 serve()
