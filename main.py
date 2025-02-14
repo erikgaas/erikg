@@ -2,7 +2,7 @@ from fasthtml.common import *
 from fasthtml.oauth import OAuth, GitHubAppClient, http_patterns, url_match
 from monsterui.all import *
 from app.ui import *
-from app.api import sign_in
+from app.api import *
 import os
 import dotenv
 
@@ -91,5 +91,25 @@ def tos(auth):
 @rt("/privacy")
 def privacy(auth):
     return PrivacyPolicyPage(auth=auth)
+
+@app.post("/api/contact")
+async def contact(contact:ContactRequest):
+    name = contact.name
+    email = contact.email
+    message = contact.message
+    contact_data = {
+        'name': name,
+        'email': email,
+        'message': message
+    }
+    store_contact_request(contact_data)
+    
+    return Alert(
+        DivLAligned(
+            UkIcon("check", cls="text-white"), 
+            "Message sent successfully! I'll get back to you soon.",
+        ),
+        cls=AlertT.success
+    )
 
 serve()

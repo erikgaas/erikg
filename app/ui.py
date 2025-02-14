@@ -230,6 +230,12 @@ sample_blogs = [
     )
 ]
 
+@dataclass
+class ContactRequest:
+    name: str
+    email: str
+    message: str
+
 def ContactModal():
     modal_header = DivLAligned(UkIcon("mail", height=24, width=24, cls="text-primary mr-3"), H3("Get in Touch", cls=TextT.bold))
 
@@ -256,30 +262,43 @@ def ContactModal():
         )
     )
 
-    subscribe_checkbox = Div(
-        LabelCheckboxX("Keep me updated about new blog posts and projects", 
-                        id="subscribe", cls="text-sm", input_cls="bg-primary hover:bg-primary-focus border-primary")
-    )
+    # subscribe_checkbox = Div(
+    #     LabelCheckboxX("Keep me updated about new blog posts and projects", 
+    #                     id="subscribe", cls="text-sm", input_cls="bg-primary hover:bg-primary-focus border-primary")
+    # )
 
     cancel_button = Button(cls=(ButtonT.secondary, "py-3 min-w-[120px]"), uk_toggle="target: #contact-modal")(
-        DivLAligned(UkIcon("x", height=20, width=20, cls="mr-2"), "Cancel", cls="px-4")
+        DivLAligned(UkIcon("", height=20, width=20, cls="mr-2"), 
+                    "Cancel",
+                    cls="px-4")
     )
 
-    send_button = Button(
-        DivLAligned(
-            UkIcon("send", height=20, width=20, cls="mr-2"),
+    send_button = Button(cls=(ButtonT.primary, "py-3 min-w-[180px]"), submit=True)(
+        DivLAligned(UkIcon("send", height=20, width=20, cls="mr-2"),
             "Send Message",
-            Loading(cls=(LoadingT.spinner + LoadingT.sm, "ml-2"), htmx_indicator=True),
-            cls="px-4"
-        ), 
-        cls=(ButtonT.primary, "py-3 min-w-[180px]")
+            Loading(cls=(LoadingT.spinner + LoadingT.sm, "ml-2"), htmx_indicator=True, id="loading-indicator"),
+            cls="px-4"), 
     )
 
     action_buttons = DivRAligned(cancel_button, send_button, cls="space-x-4")
-    contact_form = Form(Grid(name_input, email_input, cols=2, gap=6),message_input, subscribe_checkbox, cls='space-y-6')
 
-    return Modal(alert, contact_form, header=(modal_header, ), footer=(action_buttons),
-                 cls=(CardT.secondary, "w-full mx-auto"), id="contact-modal")
+    contact_form = Form(
+        Grid(name_input, email_input, cols=2, gap=6), 
+        message_input,  
+        DivRAligned(action_buttons, cls="mt-6"),
+        cls='space-y-6',
+        hx_post="/api/contact", 
+        hx_trigger="submit",
+        hx_on="htmx:afterRequest: UIkit.modal('#contact-modal').hide()"
+    )
+
+    return Modal(
+        alert, 
+        contact_form, 
+        header=(modal_header, ),
+        cls=(CardT.secondary, "w-full mx-auto"), 
+        id="contact-modal"
+    )
 
 def ProjectCard(project):
     """Create a card for a single project"""

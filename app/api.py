@@ -24,5 +24,6 @@ def get_user(auth):
     user = users(where="github_id=?", where_args=(auth,))
     return user[0] if user else None
 
-def save_mode_preference(auth, mode):
-    pass
+def store_contact_request(contact):
+    contacts = db.t.contact
+    return contacts.insert(name=contact['name'], email=contact['email'], message=contact['message'], created_at=datetime.now().isoformat(), deleted=False, responded=False, response_date=None)

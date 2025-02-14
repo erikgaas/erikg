@@ -37,10 +37,13 @@ class Contact:
     created_at: str
     responded: bool  # Track if you've handled the contact request
     response_date: str
+    deleted: bool
 
 
 def get_database():
     db = database("personal_site.sqlite")
     users = db['users']
+    contacts = db['contacts']
     if users not in db.tables:db.create(User, pk='github_id')
+    if contacts not in db.tables:db.create(Contact, pk='id')
     return db
