@@ -147,7 +147,7 @@ def HeroSection():
             DivLAligned(UkIcon(icon, height=24, width=24, cls="mr-3"), text, cls="px-2")
         )
     
-    social_icons = [("github", "https://github.com/erikgaas", "GitHub"), ("linkedin", "https://www.linkedin.com/in/erikgaas", "LinkedIn"), ("file-text", "#", "Resume")]
+    social_icons = [("github", "https://github.com/erikgaas", "GitHub"), ("linkedin", "https://www.linkedin.com/in/erikgaas", "LinkedIn"), ("file-text", "/static/Erik_Resume.pdf", "Resume")]
     social_buttons = [SocialButton(icon, href, text) for icon, href, text in social_icons]
     social_buttons = Div(*social_buttons,cls="space-y-3 sm:space-y-0 sm:flex sm:space-x-6 w-full")
     name = H1("Erik Gaasedelen", cls=TextT.bold + TextT.muted + TextT.primary + "text-center sm:text-left")
