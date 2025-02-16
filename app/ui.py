@@ -3,7 +3,7 @@ from fasthtml.common import *
 from fasthtml.svg import *
 from datetime import datetime
 
-from app.api import get_user
+from app.api import *
 
 def LoginButton():
     return A(href="/login")(
@@ -970,6 +970,91 @@ def PrivacyPolicy():
            cls=TextPresets.muted_sm)
     )
 
+def ContactRequestCard(contact):
+    """Create a card for a single contact request"""
+    status = Alert("Responded" if contact.responded else "Pending",
+                  cls=(AlertT.success if contact.responded else AlertT.warning, 
+                       "w-24 text-center text-sm font-medium"))
+    
+    header = DivFullySpaced(
+        DivLAligned(
+            H4(contact.name, cls=(TextT.bold, "text-lg")),
+            P(contact.email, cls=(TextPresets.muted_sm, "mt-1")),
+            cls="space-y-0.5"
+        ),
+        status
+    )
+    
+    timestamps = DivFullySpaced(
+        DivLAligned(
+            UkIcon("calendar", height=16, width=16, cls="text-muted mr-2"),
+            P(f"Received: {contact.created_at}", cls=TextPresets.muted_sm)
+        ),
+        DivLAligned(
+            UkIcon("clock", height=16, width=16, cls="text-muted mr-2"),
+            P(f"Responded: {contact.response_date or 'Not yet'}", 
+              cls=(TextPresets.muted_sm, "text-success" if contact.responded else ""))
+        )
+    )
+    
+    actions = DivRAligned(
+        Button(DivLAligned(UkIcon("trash-2", height=16, width=16, cls="mr-2"), "Delete"), 
+               cls=(ButtonT.ghost, "text-destructive hover:text-destructive/90"),
+               hx_delete=f'/contact/delete/{contact.id}',
+               target_id=f'contact-{contact.id}',
+               hx_swap="outerHTML",
+               hx_confirm="Are you sure you want to delete this contact request?"),
+        Button(DivLAligned(
+                UkIcon("check-circle" if not contact.responded else "x-circle", 
+                      height=16, width=16, cls="mr-2"),
+                "Mark " + ("Pending" if contact.responded else "Responded")),
+               cls=(ButtonT.primary, "ml-2"),
+               hx_get=f'/contact/toggle/{contact.id}',
+               target_id=f'contact-{contact.id}',
+               hx_swap="outerHTML"),
+        cls="mt-4"
+    )
+    
+    return Card(header,
+               Div(P(contact.message, cls=(TextT.muted, "text-sm leading-relaxed")), 
+                   DividerSplit(cls="my-4"), 
+                   timestamps,
+                   cls="space-y-4"),
+               actions,
+               id=f'contact-{contact.id}',
+               cls=(CardT.hover + CardT.secondary, "mb-4 p-5"))
+
+def ContactRequests(requests):
+    """Display and manage contact form submissions"""
+    header = HomeSectionHeader(
+        "Contact Requests",
+        "Manage and respond to contact form submissions",
+        None, None
+    )
+    
+    toolbar = DivFullySpaced(
+        Input(placeholder="Search requests...", 
+              cls="w-64 bg-secondary border-border",
+              uk_icon="icon: search"),
+        UkSelect(*Options("All", "Pending", "Responded", selected_idx=0), 
+                cls="w-32 ml-2 bg-secondary border-border"),
+        cls="mb-6"
+    )
+    
+    if not requests:
+        return Div(header, toolbar,
+            Card(DivCentered(
+                UkIcon('mail', height=48, width=48, cls="text-primary/50 mb-4"),
+                H3("No Contact Requests", cls=(TextT.bold, "text-xl")),
+                P("When you receive contact requests, they will appear here.", 
+                  cls=(TextPresets.muted_sm, "max-w-sm text-center")),
+                cls="py-16"
+            ), cls=(CardT.secondary, "border border-border/50")),
+            cls="container mx-auto max-w-4xl px-4 py-8 space-y-6"
+        )
+    
+    return Div(header, toolbar, *map(ContactRequestCard, requests),
+              cls="container mx-auto max-w-4xl px-4 py-8 space-y-6")
 
 def CommonScreen(*c, auth=None):
     user = get_user(auth)
@@ -1006,3 +1091,9 @@ def TermsOfServicePage(auth=None):
 
 def PrivacyPolicyPage(auth=None):
     return CommonScreen(PrivacyPolicy(), auth=auth)
+
+def ContactRequestsPage(auth=None):
+    user = get_user(auth)
+    requests = get_contact_requests()
+    if user.is_admin: return CommonScreen(ContactRequests(requests), auth=auth)
+    else:             return RedirectResponse('/', status_code=303)

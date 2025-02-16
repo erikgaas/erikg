@@ -27,3 +27,40 @@ def get_user(auth):
 def store_contact_request(contact):
     contacts = db.t.contact
     return contacts.insert(name=contact['name'], email=contact['email'], message=contact['message'], created_at=datetime.now().isoformat(), deleted=False, responded=False, response_date=None)
+
+def get_contact_requests():
+    contacts = db.t.contact
+    return contacts(where="deleted=?", where_args=(False,))
+
+def delete_contact_request(id):
+    contacts = db.t.contact
+    return contacts.update(id=id, deleted=True)
+
+def mark_contact_request_responded(id):
+    contacts = db.t.contact
+    return contacts.update(id=id, responded=True, response_date=datetime.now().isoformat())
+
+def homepage_projects():
+    projects = db.t.project
+    return projects(where="featured=?", where_args=(True,), order="created_at DESC", limit=3)
+
+def get_projects(statuses=None, tags=None, featured=None, newest=True):
+    projects = db.t.project
+    where_clauses = []
+    where_args = []
+    if statuses:
+        where_clauses.append("status IN (?)")
+        where_args.extend(statuses)
+    if tags:
+        where_clauses.append("tags LIKE ?")
+        where_args.append(f"%{tags}%")
+    if featured:
+        where_clauses.append("featured=?")
+        where_args.append(featured)
+    if newest:
+        order = "created_at DESC"
+    return projects(where=" AND ".join(where_clauses), where_args=where_args, order=order)
+
+def homepage_blogposts():
+    blogposts = db.t.blog
+    return blogposts(where="published=?", where_args=(True,))

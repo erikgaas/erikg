@@ -92,6 +92,10 @@ def tos(auth):
 def privacy(auth):
     return PrivacyPolicyPage(auth=auth)
 
+@rt("/contact")
+def contact(auth):
+    return ContactRequestsPage(auth=auth)
+
 @app.post("/api/contact")
 async def contact(contact:ContactRequest):
     name = contact.name
@@ -111,5 +115,15 @@ async def contact(contact:ContactRequest):
         ),
         cls=AlertT.success
     )
+
+@rt("/contact/delete/{id}")
+def delete(id: int):
+    delete_contact_request(id)
+    return ""
+
+@rt("/contact/toggle/{id}")
+def toggle(id: int):
+    request = mark_contact_request_responded(id)
+    return ContactRequestCard(request)
 
 serve()
