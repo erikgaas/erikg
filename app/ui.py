@@ -21,44 +21,22 @@ def ProfileDropdown(user):
         # ("Settings", "settings", "⌘S"),
         ("Logout", "log-out", "", "/logout")
     ]
-    def DropdownItem(text, icon, hotkey="", onclick=""):
-        return NavCloseLi(A(
-            DivFullySpaced(
-                DivLAligned(
-                    UkIcon(icon, height=16, width=16, cls="mr-2"),
-                    text
-                ),
-                P(hotkey, cls=TextPresets.muted_sm) if hotkey else None
-            ), 
-            onclick=f"window.location.href='{onclick}'",
-            cls="hover:text-primary transition-colors cursor-pointer"
-        ), cls="list-none")
+    def DropdownItem(text, icon, hotkey="", href=""):
+        icon = UkIcon(icon, height=16, width=16, cls="mr-2")
+        hotkey = P(hotkey, cls=TextPresets.muted_sm) if hotkey else None
+        ANav = A(onclick=f"window.location.href='{href}'", cls="hover:text-primary transition-colors cursor-pointer")
+        info = DivLAligned(icon, text)
+        item = ANav(DivFullySpaced(info, hotkey))
+        return NavCloseLi(item, cls="list-none")
     
     # Main button with user info
-    button = Button(
-        DivLAligned(
-            # User avatar (using DiceBearAvatar or user's GitHub avatar)
-            Img(src=user.avatar_url or DiceBearAvatar(user.display_name, 8, 8), 
-                alt="Profile", 
-                cls="w-8 h-8 rounded-full mr-2"),
-            # User name
-            P(user.display_name, cls=TextPresets.md_weight_muted),
-            # Dropdown chevron
-            UkIcon('chevron-down', height=16, width=16, cls="ml-2"),
-            cls="px-4 py-2"
-        ),
-        cls=(ButtonT.ghost, 
-             "hover:bg-muted", 
-             "hover:text-primary",
-             "transition-colors duration-200", 
-             "border border-border/50", 
-             "rounded-full",
-             "min-w-[100px]")
-    )
+    ProfileButton = Button(cls=(ButtonT.ghost, "hover:bg-muted", "hover:text-primary","transition-colors duration-200", "border border-border/50", "rounded-full","min-w-[100px]"))
+    profile_avatar = Img(src=user.avatar_url or DiceBearAvatar(user.display_name, 8, 8), alt="Profile", cls="w-8 h-8 rounded-full mr-2")
+    profile_name = P(user.display_name, cls=TextPresets.md_weight_muted)
+    profile_chevron = UkIcon('chevron-down', height=16, width=16, cls="ml-2")
+    button = ProfileButton(DivLAligned(profile_avatar, profile_name, profile_chevron, cls="px-4 py-2"))
     
-    # Create the dropdown menu
     dropdown = DropDownNavContainer(
-        # User info header
         NavHeaderLi(
             P(user.display_name, cls=TextPresets.bold_sm),
             NavSubtitle(user.email, ),
@@ -67,7 +45,7 @@ def ProfileDropdown(user):
         # Menu items
         *[DropdownItem(text, icon, hotkey, href) for text, icon, hotkey, href in dropdown_items], 
     )
-    
+        
     return Div(button, dropdown)
 
 def MobileMenu(nav_items):
@@ -481,7 +459,7 @@ def ProjectToolbar(tags, statuses, active_tag=None, active_status=None, sort_by=
         Div(H4("Technologies", cls=TextPresets.bold_sm), tag_filters, cls="space-y-2"),
     )
 
-def ProjectPage(projects):
+def ProjectPage(projects, auth=None):
     # Extract unique tags and statuses from all projects
     all_tags = set()
     all_statuses = set()
@@ -502,7 +480,7 @@ def ProjectPage(projects):
             ),
             cls=ButtonT.primary,
             uk_toggle="target: #new-project-modal"
-        )
+        ) if auth and get_user(auth).is_admin else None
     )
     
     toolbar = ProjectToolbar(sorted(all_tags), sorted(all_statuses))
@@ -1078,7 +1056,7 @@ def ListBlogs(auth=None):
     return CommonScreen(BlogPage(sample_blogs), auth=auth)
 
 def ListProjects(auth=None):
-    return CommonScreen(ProjectPage(sample_projects), auth=auth)
+    return CommonScreen(ProjectPage(sample_projects, auth=auth), auth=auth)
 
 def BlogPostPage(auth=None):
     return CommonScreen(FullBlogPost(), auth=auth)
