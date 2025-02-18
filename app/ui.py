@@ -310,38 +310,38 @@ def ProjectsSection(projects):
     
     return Section(header, project_grid, cls="mt-16 mx-auto max-w-6xl px-4")
 
-sample_projects = [
-    SimpleNamespace(
-        title="AutoML Platform",
-        description="An end-to-end machine learning platform for automated model training and deployment.",
-        image_url="https://picsum.photos/800/400?random=4",
-        project_url="https://github.com/username/automl",
-        github_url="https://github.com/username/automl",
-        status="completed",
-        featured=True,
-        tags="python,machine-learning,docker"
-    ),
-    SimpleNamespace(
-        title="Autonomous Navigation System",
-        description="Real-time path planning and obstacle avoidance system for autonomous vehicles.",
-        image_url="https://picsum.photos/800/400?random=5",
-        project_url="https://github.com/username/nav-system",
-        github_url="https://github.com/username/nav-system",
-        status="in-progress",
-        featured=True,
-        tags="robotics,c++,ros"
-    ),
-    SimpleNamespace(
-        title="Medical Image Analysis",
-        description="Deep learning models for automated medical image analysis and diagnosis.",
-        image_url="https://picsum.photos/800/400?random=6",
-        project_url="https://github.com/username/med-image",
-        github_url="https://github.com/username/med-image",
-        status="completed",
-        featured=True,
-        tags="deep-learning,healthcare,python"
-    )
-]
+# sample_projects = [
+#     SimpleNamespace(
+#         title="AutoML Platform",
+#         description="An end-to-end machine learning platform for automated model training and deployment.",
+#         image_url="https://picsum.photos/800/400?random=4",
+#         project_url="https://github.com/username/automl",
+#         github_url="https://github.com/username/automl",
+#         status="completed",
+#         featured=True,
+#         tags="python,machine-learning,docker"
+#     ),
+#     SimpleNamespace(
+#         title="Autonomous Navigation System",
+#         description="Real-time path planning and obstacle avoidance system for autonomous vehicles.",
+#         image_url="https://picsum.photos/800/400?random=5",
+#         project_url="https://github.com/username/nav-system",
+#         github_url="https://github.com/username/nav-system",
+#         status="in-progress",
+#         featured=True,
+#         tags="robotics,c++,ros"
+#     ),
+#     SimpleNamespace(
+#         title="Medical Image Analysis",
+#         description="Deep learning models for automated medical image analysis and diagnosis.",
+#         image_url="https://picsum.photos/800/400?random=6",
+#         project_url="https://github.com/username/med-image",
+#         github_url="https://github.com/username/med-image",
+#         status="completed",
+#         featured=True,
+#         tags="deep-learning,healthcare,python"
+#     )
+# ]
 
 def Footer():
     social_links = [("github", "https://github.com/erikgaas"), ("linkedin", "https://www.linkedin.com/in/erikgaas"), ("twitter", "https://x.com/erikgaas"),]
@@ -507,28 +507,28 @@ def ProjectPage(projects, auth=None):
         cls="container mx-auto max-w-6xl px-4 py-8 space-y-8"
     )
 
-more_sample_projects = sample_projects + [
-    SimpleNamespace(
-        title="Personal Finance Dashboard",
-        description="Interactive dashboard for tracking personal finances and investments.",
-        image_url="https://picsum.photos/800/400?random=7",
-        project_url="https://github.com/username/finance-dash",
-        github_url="https://github.com/username/finance-dash",
-        status="in-progress",
-        featured=False,
-        tags="python,react,finance"
-    ),
-    SimpleNamespace(
-        title="Smart Home Controller",
-        description="IoT system for managing home automation devices.",
-        image_url="https://picsum.photos/800/400?random=8",
-        project_url="https://github.com/username/smart-home",
-        github_url="https://github.com/username/smart-home",
-        status="archived",
-        featured=False,
-        tags="python,iot,raspberry-pi"
-    )
-]
+# more_sample_projects = sample_projects + [
+#     SimpleNamespace(
+#         title="Personal Finance Dashboard",
+#         description="Interactive dashboard for tracking personal finances and investments.",
+#         image_url="https://picsum.photos/800/400?random=7",
+#         project_url="https://github.com/username/finance-dash",
+#         github_url="https://github.com/username/finance-dash",
+#         status="in-progress",
+#         featured=False,
+#         tags="python,react,finance"
+#     ),
+#     SimpleNamespace(
+#         title="Smart Home Controller",
+#         description="IoT system for managing home automation devices.",
+#         image_url="https://picsum.photos/800/400?random=8",
+#         project_url="https://github.com/username/smart-home",
+#         github_url="https://github.com/username/smart-home",
+#         status="archived",
+#         featured=False,
+#         tags="python,iot,raspberry-pi"
+#     )
+# ]
 
 def TableOfContents(sections):
     def create_toc_link(text, id):
@@ -1118,10 +1118,11 @@ def CommonScreen(*c, auth=None):
     )
 
 def Home(auth=None):
+    projects = get_projects()
     return CommonScreen(    
         HeroSection(),
         LatestBlogs(sample_blogs),
-        ProjectsSection(sample_projects),
+        ProjectsSection(projects),
         auth=auth
     )
     
@@ -1129,7 +1130,8 @@ def ListBlogs(auth=None):
     return CommonScreen(BlogPage(sample_blogs), auth=auth)
 
 def ListProjects(auth=None):
-    return CommonScreen(ProjectPage(sample_projects, auth=auth), auth=auth)
+    projects = get_projects()
+    return CommonScreen(ProjectPage(projects, auth=auth), auth=auth)
 
 def BlogPostPage(auth=None):
     return CommonScreen(FullBlogPost(), auth=auth)

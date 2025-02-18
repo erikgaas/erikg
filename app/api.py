@@ -51,6 +51,7 @@ def get_projects(statuses=None, tags=None, featured=None, newest=True):
     projects = db.t.project
     where_clauses = []
     where_args = []
+    
     if statuses:
         where_clauses.append("status IN (?)")
         where_args.extend(statuses)
@@ -60,9 +61,17 @@ def get_projects(statuses=None, tags=None, featured=None, newest=True):
     if featured:
         where_clauses.append("featured=?")
         where_args.append(featured)
-    if newest:
-        order = "created_at DESC"
-    return projects(where=" AND ".join(where_clauses), where_args=where_args, order=order)
+        
+    order_by = "created_at DESC" if newest else "created_at ASC"
+    
+    # Only add WHERE clause if we have conditions
+    where = " AND ".join(where_clauses) if where_clauses else None
+    
+    return projects(
+        where=where, 
+        where_args=where_args if where_args else None,
+        order_by=order_by  # Changed from order to order_by
+    )
 
 def create_project(project:Project):
     projects = db.t.project
