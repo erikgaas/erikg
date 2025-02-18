@@ -1,6 +1,9 @@
+from dataclasses import dataclass
 from datetime import datetime
 from app.db import get_database
 db = get_database()
+
+Project = db.t.project.dataclass()
 
 def create_user_from_github(info):
     users = db.t.user
@@ -60,6 +63,12 @@ def get_projects(statuses=None, tags=None, featured=None, newest=True):
     if newest:
         order = "created_at DESC"
     return projects(where=" AND ".join(where_clauses), where_args=where_args, order=order)
+
+def create_project(project:Project):
+    projects = db.t.project
+    project.created_at = datetime.now().isoformat()
+    project.updated_at = project.created_at
+    return projects.insert(project)
 
 def homepage_blogposts():
     blogposts = db.t.blog

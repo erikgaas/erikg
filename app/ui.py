@@ -498,7 +498,14 @@ def ProjectPage(projects, auth=None):
         cls="mt-8 justify-center space-x-2"
     )
 
-    return Div(header, toolbar, project_grid, pagination, cls="container mx-auto max-w-6xl px-4 py-8 space-y-8")
+    return Div(
+        header, 
+        toolbar, 
+        project_grid, 
+        pagination, 
+        NewProjectModal() if auth and get_user(auth).is_admin else None,
+        cls="container mx-auto max-w-6xl px-4 py-8 space-y-8"
+    )
 
 more_sample_projects = sample_projects + [
     SimpleNamespace(
@@ -1033,6 +1040,72 @@ def ContactRequests(requests):
     
     return Div(header, toolbar, *map(ContactRequestCard, requests),
               cls="container mx-auto max-w-4xl px-4 py-8 space-y-6")
+
+
+def NewProjectModal():
+    folder_icon = UkIcon("folder-plus", height=24, width=24, cls="text-primary mr-3")
+    header_text = H3("Add New Project", cls=TextT.bold)
+    
+    modal_header = DivLAligned(folder_icon, header_text)
+
+    title_input = LabelInput("Title", id="title", placeholder="Project name", uk_tooltip="A clear, concise name for your project")
+    
+    description_input = LabelTextArea("Description", id="description", 
+                                    placeholder="Describe your project's purpose and key features",
+                                    uk_tooltip="What makes this project special?")
+    
+    url_inputs = Grid(
+        LabelInput("Project URL", id="project_url", placeholder="https://...",  icon="link", uk_tooltip="Link to live demo or deployment"),
+        LabelInput("GitHub URL", id="github_url", placeholder="https://github.com/...", icon="github", uk_tooltip="Link to source code"),
+        cols=2, gap=6
+    )
+    
+    image_input = LabelInput("Image URL", id="image_url", placeholder="https://...", icon="image", uk_tooltip="A screenshot or preview image")
+
+    status_select = LabelSelect(
+        *Options("in-progress", "completed", "archived", selected_idx=0),
+        label="Status",
+        id="status",
+        uk_tooltip="Current state of the project"
+    )
+    
+    tags_input = LabelInput("Tags", id="tags", placeholder="python, web-development, machine-learning", 
+                           uk_tooltip="Comma-separated list of technologies or categories")
+    
+    featured_checkbox = LabelCheckboxX(
+        "Feature this project", 
+        id="featured",
+        name="featured",
+        value="1",        # Will submit as '1' when checked
+        uk_tooltip="Show this project in the featured section"
+    )
+
+    cancel_button = Button(cls=(ButtonT.secondary, "py-3 min-w-[120px]"), uk_toggle="target: #new-project-modal")(
+        DivLAligned(UkIcon("x", height=20, width=20, cls="mr-2"), "Cancel", cls="px-4")
+    )
+
+    loading_icon = Loading(cls=(LoadingT.spinner + LoadingT.sm, "ml-2"), htmx_indicator=True)
+    save_button = Button(cls=(ButtonT.primary, "py-3 min-w-[180px]"), submit=True)(
+                    DivLAligned(UkIcon("save", height=20, width=20, cls="mr-2"), "Save Project", loading_icon, cls="px-4"))
+
+    action_buttons = DivRAligned(cancel_button, save_button, cls="space-x-4")
+
+    project_form = Form(
+        Grid(title_input, status_select, cols=2, gap=6),
+        description_input,
+        url_inputs,
+        image_input,
+        tags_input,
+        featured_checkbox,
+        DivRAligned(action_buttons, cls="mt-6"),
+        cls='space-y-6',
+        hx_post="/api/projects/new",
+        hx_trigger="submit",
+        hx_on="htmx:afterRequest: UIkit.modal('#new-project-modal').hide()"
+    )
+
+    return Modal(project_form, header=(modal_header,), cls=(CardT.secondary, "w-full mx-auto"), id="new-project-modal")
+
 
 def CommonScreen(*c, auth=None):
     user = get_user(auth)

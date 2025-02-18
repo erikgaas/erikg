@@ -21,7 +21,8 @@ class Project:
     title: str
     description: str
     image_url: str
-    project_url: str  # Link to GitHub or live demo
+    project_url: str
+    github_url: str
     created_at: str
     updated_at: str
     author_id: int
@@ -44,6 +45,8 @@ def get_database():
     db = database("personal_site.sqlite")
     users = db['users']
     contacts = db['contacts']
+    projects = db['projects']
     if users not in db.tables:db.create(User, pk='github_id')
     if contacts not in db.tables:db.create(Contact, pk='id')
+    if projects not in db.tables:db.create(Project, pk='id')
     return db

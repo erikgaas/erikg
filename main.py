@@ -101,11 +101,7 @@ async def contact(contact:ContactRequest):
     name = contact.name
     email = contact.email
     message = contact.message
-    contact_data = {
-        'name': name,
-        'email': email,
-        'message': message
-    }
+    contact_data = {'name': name,'email': email,'message': message}
     store_contact_request(contact_data)
     
     return Alert(
@@ -115,6 +111,11 @@ async def contact(contact:ContactRequest):
         ),
         cls=AlertT.success
     )
+
+@app.post("/api/projects/new")
+async def new_project(project:Project):
+    create_project(project)
+    return ""
 
 @rt("/contact/delete/{id}")
 def delete(id: int):
