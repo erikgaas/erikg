@@ -76,9 +76,13 @@ def blogs(auth):
 def projects(auth):
     return ListProjects(auth=auth)
 
-@rt("/blogposts/sample-post")
-def blogpost():
-    return BlogPostPage()
+@rt("/blog/{slug:str}")
+def blogpost(slug:str):
+    blogpost = get_blog_post(slug)
+    if not blogpost: return RedirectResponse("/blogposts", status_code=303)
+    add_blog_view(slug)
+    if slug == "build-a-personal-blog": return BlogPostPage()
+
 
 @rt("/login")
 def login(req, auth):
@@ -115,6 +119,11 @@ async def contact(contact:ContactRequest):
 @app.post("/api/projects/new")
 async def new_project(project:Project):
     create_project(project)
+    return ""
+
+@app.post("/api/blogs/new")
+async def new_blog(blog:Blog):
+    create_blog_post(blog)
     return ""
 
 @rt("/contact/delete/{id}")

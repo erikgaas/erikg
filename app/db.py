@@ -46,7 +46,9 @@ def get_database():
     users = db['users']
     contacts = db['contacts']
     projects = db['projects']
+    blogs = db['blogs']
     if users not in db.tables:db.create(User, pk='github_id')
     if contacts not in db.tables:db.create(Contact, pk='id')
     if projects not in db.tables:db.create(Project, pk='id')
+    if blogs not in db.tables:db.create(Blog, pk='id')
     return db

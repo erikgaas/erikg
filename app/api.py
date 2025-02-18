@@ -4,6 +4,7 @@ from app.db import get_database
 db = get_database()
 
 Project = db.t.project.dataclass()
+Blog = db.t.blog.dataclass()
 
 def create_user_from_github(info):
     users = db.t.user
@@ -78,6 +79,29 @@ def create_project(project:Project):
     project.created_at = datetime.now().isoformat()
     project.updated_at = project.created_at
     return projects.insert(project)
+
+def create_blog_post(blog:Blog):
+    blogs = db.t.blog
+    blog.created_at = datetime.now().isoformat()
+    blog.updated_at = blog.created_at
+    blog.views = 0
+    return blogs.insert(blog)
+
+def get_blog_posts():
+    blogs = db.t.blog
+    return blogs(where="published=?", where_args=(True,))
+
+def get_blog_post(slug:str):
+    blogs = db.t.blog
+    matched = blogs(where="url_slug=?", where_args=(slug,))
+    return matched[0] if matched else None
+
+def add_blog_view(slug:str):
+    blogs = db.t.blog
+    matched = blogs(where="url_slug=?", where_args=(slug,))
+    if matched:
+        matched[0].views = int(matched[0].views) + 1
+        return blogs.update(matched[0])
 
 def homepage_blogposts():
     blogposts = db.t.blog

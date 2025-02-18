@@ -146,7 +146,8 @@ def HeroSection():
 def BlogCard(blog):
     """Create a preview card for a single blog post"""
     image_section = Div(cls="relative")(Img(src=blog.image_url, alt=blog.title, cls="object-cover w-full h-48"))
-    published = DivHStacked(UkIcon("calendar", height=16, width=16), P(blog.created_at, cls=TextPresets.muted_sm), cls="space-x-2")
+    formated_created_date = datetime.strptime(blog.created_at, "%Y-%m-%dT%H:%M:%S.%f").strftime("%B %d, %Y")
+    published = DivHStacked(UkIcon("calendar", height=16, width=16), P(formated_created_date, cls=TextPresets.muted_sm), cls="space-x-2")
     views = DivHStacked(UkIcon("eye", height=16, width=16), P(f"{blog.views} views", cls=TextPresets.muted_sm), cls="space-x-2")
     metadata = DivLAligned(cls="space-x-4")(published, views)
     title_section = Div(cls="space-y-2")(H3(blog.title, cls=TextT.bold), metadata)
@@ -177,36 +178,36 @@ def LatestBlogs(blogs):
     blog_grid = Div(cls="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 justify-items-center")(*[BlogCard(blog) for blog in blogs])
     return Section(header, blog_grid, cls="mt-16 mx-auto max-w-6xl px-4")
 
-# Let's create some sample blog posts
-sample_blogs = [
-    SimpleNamespace(
-        title="Building a Personal Website with MonsterUI",
-        description="A deep dive into creating a modern, responsive personal website using Python and MonsterUI framework.",
-        image_url="https://picsum.photos/800/400?random=1",
-        created_at="July 24, 2024",
-        views=142,
-        tags="python,web-development,tutorial",
-        url_slug="building-personal-website-monsterui"
-    ),
-    SimpleNamespace(
-        title="Machine Learning in Production",
-        description="Best practices for deploying and monitoring machine learning models in production environments.",
-        image_url="https://picsum.photos/800/400?random=2",
-        created_at="July 22, 2024",
-        views=98,
-        tags="machine-learning,devops,python",
-        url_slug="ml-in-production"
-    ),
-    SimpleNamespace(
-        title="The Future of Autonomous Vehicles",
-        description="Exploring recent developments in self-driving technology and what the future might hold.",
-        image_url="https://picsum.photos/800/400?random=3",
-        created_at="July 20, 2024",
-        views=215,
-        tags="autonomous-vehicles,technology,future",
-        url_slug="future-of-av"
-    )
-]
+# # Let's create some sample blog posts
+# sample_blogs = [
+#     SimpleNamespace(
+#         title="Building a Personal Website with MonsterUI",
+#         description="A deep dive into creating a modern, responsive personal website using Python and MonsterUI framework.",
+#         image_url="https://picsum.photos/800/400?random=1",
+#         created_at="July 24, 2024",
+#         views=142,
+#         tags="python,web-development,tutorial",
+#         url_slug="building-personal-website-monsterui"
+#     ),
+#     SimpleNamespace(
+#         title="Machine Learning in Production",
+#         description="Best practices for deploying and monitoring machine learning models in production environments.",
+#         image_url="https://picsum.photos/800/400?random=2",
+#         created_at="July 22, 2024",
+#         views=98,
+#         tags="machine-learning,devops,python",
+#         url_slug="ml-in-production"
+#     ),
+#     SimpleNamespace(
+#         title="The Future of Autonomous Vehicles",
+#         description="Exploring recent developments in self-driving technology and what the future might hold.",
+#         image_url="https://picsum.photos/800/400?random=3",
+#         created_at="July 20, 2024",
+#         views=215,
+#         tags="autonomous-vehicles,technology,future",
+#         url_slug="future-of-av"
+#     )
+# ]
 
 @dataclass
 class ContactRequest:
@@ -378,7 +379,7 @@ def BlogToolbar(tags, active_tag=None, sort_by="newest"):
     return Div(DivFullySpaced(search_input, sort_dropdown, cls="flex-wrap gap-4"), tag_filters, cls="space-y-4 mb-8")
 
 
-def BlogPage(blogs):
+def BlogPage(blogs, auth=None):
     all_tags = set()
     for blog in blogs: all_tags.update(tag.strip() for tag in blog.tags.split(','))
     
@@ -388,6 +389,14 @@ def BlogPage(blogs):
             P("Thoughts, tutorials, and insights", cls=TextPresets.muted_sm),
             cls="space-y-2"
         ),
+        Button(
+            DivLAligned(
+                UkIcon("plus-circle", height=20),
+                "New Post"
+            ),
+            cls=ButtonT.primary,
+            uk_toggle="target: #new-blog-modal"
+        ) if auth and get_user(auth).is_admin else None
     )
     
     toolbar = BlogToolbar(sorted(all_tags))
@@ -402,7 +411,7 @@ def BlogPage(blogs):
         cls="mt-8 justify-center space-x-2"
     )
 
-    return Div(header, toolbar, blog_grid, pagination, cls="container mx-auto max-w-6xl px-4 py-8 space-y-8")
+    return Div(header, toolbar, blog_grid, pagination, NewBlogModal() if auth and get_user(auth).is_admin else None, cls="container mx-auto max-w-6xl px-4 py-8 space-y-8")
 
 def ProjectToolbar(tags, statuses, active_tag=None, active_status=None, sort_by="newest"):
     search_input = Div(
@@ -1106,6 +1115,109 @@ def NewProjectModal():
 
     return Modal(project_form, header=(modal_header,), cls=(CardT.secondary, "w-full mx-auto"), id="new-project-modal")
 
+def NewBlogModal():
+    file_icon = UkIcon("file-text", height=24, width=24, cls="text-primary mr-3")
+    modal_header = DivLAligned(file_icon, H3("Add New Blog Post", cls=TextT.bold))
+
+    title_input = LabelInput(
+        "Title", 
+        id="title", 
+        placeholder="Your blog post title", 
+        uk_tooltip="A clear, engaging title for your post"
+    )
+    
+    description_input = LabelTextArea(
+        "Description", 
+        id="description", 
+        placeholder="A brief summary of your blog post",
+        uk_tooltip="This will appear in preview cards and search results"
+    )
+    
+    url_slug_input = LabelInput(
+        "URL Slug", 
+        id="url_slug", 
+        placeholder="my-awesome-blog-post",
+        uk_tooltip="The URL-friendly version of your title (e.g., my-first-post)"
+    )
+    
+    image_input = LabelInput(
+        "Image URL", 
+        id="image_url", 
+        placeholder="https://...", 
+        icon="image", 
+        uk_tooltip="Cover image for your blog post"
+    )
+    
+    tags_input = LabelInput(
+        "Tags", 
+        id="tags", 
+        placeholder="python, web-development, tutorial", 
+        uk_tooltip="Comma-separated list of topics"
+    )
+    
+    published_checkbox = LabelCheckboxX(
+        "Publish immediately", 
+        id="published",
+        name="published",
+        value="1",
+        uk_tooltip="Uncheck to save as draft"
+    )
+
+    # Buttons
+    cancel_button = Button(
+        cls=(ButtonT.secondary, "py-3 min-w-[120px]"), 
+        uk_toggle="target: #new-blog-modal"
+    )(
+        DivLAligned(
+            UkIcon("x", height=20, width=20, cls="mr-2"), 
+            "Cancel", 
+            cls="px-4"
+        )
+    )
+
+    loading_icon = Loading(
+        cls=(LoadingT.spinner + LoadingT.sm, "ml-2"), 
+        htmx_indicator=True
+    )
+    
+    save_button = Button(
+        cls=(ButtonT.primary, "py-3 min-w-[180px]"), 
+        submit=True
+    )(
+        DivLAligned(
+            UkIcon("save", height=20, width=20, cls="mr-2"), 
+            "Save Post", 
+            loading_icon, 
+            cls="px-4"
+        )
+    )
+
+    action_buttons = DivRAligned(
+        cancel_button, 
+        save_button, 
+        cls="space-x-4"
+    )
+
+    blog_form = Form(
+        Grid(title_input, url_slug_input, cols=2, gap=6),
+        description_input,
+        image_input,
+        tags_input,
+        published_checkbox,
+        DivRAligned(action_buttons, cls="mt-6"),
+        cls='space-y-6',
+        hx_post="/api/blogs/new",
+        hx_trigger="submit",
+        hx_on="htmx:afterRequest: UIkit.modal('#new-blog-modal').hide()"
+    )
+
+    return Modal(
+        blog_form, 
+        header=(modal_header,), 
+        cls=(CardT.secondary, "w-full mx-auto"), 
+        id="new-blog-modal"
+    )
+
 
 def CommonScreen(*c, auth=None):
     user = get_user(auth)
@@ -1119,15 +1231,17 @@ def CommonScreen(*c, auth=None):
 
 def Home(auth=None):
     projects = get_projects()
+    blogs = get_blog_posts()
     return CommonScreen(    
         HeroSection(),
-        LatestBlogs(sample_blogs),
+        LatestBlogs(blogs),
         ProjectsSection(projects),
         auth=auth
     )
     
 def ListBlogs(auth=None):
-    return CommonScreen(BlogPage(sample_blogs), auth=auth)
+    blogs = get_blog_posts()
+    return CommonScreen(BlogPage(blogs, auth=auth), auth=auth)
 
 def ListProjects(auth=None):
     projects = get_projects()
