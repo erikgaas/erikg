@@ -2,8 +2,12 @@ from monsterui.all import *
 from fasthtml.common import *
 from fasthtml.svg import *
 from datetime import datetime
+from ghapi.all import *
 
 from app.api import *
+from app.personal_blog import *
+
+URL = "https://erikgaasedelen.com"
 
 def LoginButton():
     return A(href="/login")(
@@ -113,7 +117,7 @@ def ErikNavBar(user=None):
     nav_items = [Li(A("About", href="/")), Li(A("Projects", href="/projects")), Li(A("Blog", href="/blogposts")), Li(A("Contact"), uk_toggle="target: #contact-modal")]
     mobile_menu = Button(UkIcon('menu', height=24, width=24), cls=(ButtonT.ghost, "sm:hidden"), uk_toggle="target: #mobile-menu")
 
-    left_nav  = NavBarLSide(A(H3("Erik Gaasedelen", cls="mr-6"), href="/"), NavBarNav(*nav_items, cls="hidden sm:flex"))
+    left_nav  = NavBarLSide(A(H3("Erik Gaasedelen", cls=TextT.primary + "mr-6"), href="/"), NavBarNav(*nav_items, cls="hidden sm:flex"))
     right_nav = NavBarRSide(social_icons, theme_toggle, login_btn, mobile_menu, cls="space-x-4")
 
     return Div(theme_script, NavBarContainer(left_nav, right_nav, cls="border-b border-border px-4 py-2"), MobileMenu(nav_items))
@@ -541,7 +545,7 @@ def ProjectPage(projects, auth=None):
 
 def TableOfContents(sections):
     def create_toc_link(text, id):
-        return Li(A(text, href=f"#{id}"), cls=TextPresets.muted_sm)
+        return Li(A(text, href=f"#{id}"), cls=(TextPresets.muted_sm, "list-none"))
     
     return Div(
         H4("Table of Contents", cls=TextPresets.muted_sm),
@@ -556,7 +560,7 @@ def TableOfContents(sections):
     )
 
 # Let's create a sample blog post to demonstrate
-def BlogPost():
+def BlogPost(auth=None):
     # Sample sections for our blog
     sections = [
         ("Introduction", "introduction"),
@@ -580,9 +584,12 @@ def BlogPost():
     content = Div(*[create_section(title, id) for title, id in sections],
                   cls="prose max-w-none") # prose class for better typography
     
+    gh_integration = GithubInsights(auth=auth)
+    
     # Create the layout with TOC on the left and content on the right
     return Div(
         TableOfContents(sections),
+        gh_integration,
         content,
         cls="container mx-auto max-w-3xl px-4 py-8 relative"  # Narrower max-width to allow space for TOC
     )
@@ -593,39 +600,88 @@ def estimate_read_time(text, words_per_minute=200):
     minutes = max(1, round(word_count / words_per_minute))
     return f"{minutes} min read"
 
-def BlogPostHeader(post):
+def PostTags(tags):
+    """Render a list of tags with consistent styling"""
+    return Div(
+        *[Label(tag.strip(), cls=LabelT.secondary) for tag in tags.split(',')],
+        cls="flex flex-wrap gap-2 mb-4"
+    )
+
+def AuthorInfo(author_name, created_at):
+    """Author avatar and details"""
+    formatted_date = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%S.%f").strftime("%B %d, %Y")
+    return DivLAligned(
+        Img(src="../static/github_profile.png", alt="Profile", cls="w-8 h-8 rounded-full mr-2"),
+        Div(
+            P(author_name, cls=TextT.lg + TextT.muted + TextT.secondary),
+            P(formatted_date, cls=TextPresets.muted_sm)
+        ),
+        cls="gap-3"
+    )
+
+def PostMetrics(views):
+    """Reading time and view count"""
+    return DivLAligned(
+        DivHStacked(UkIcon("eye"), P(f"{views} views", cls=TextPresets.muted_sm)),
+        cls="gap-4"
+    )
+
+def ShareButtons(post):
+    """Social sharing buttons with working share functionality"""
+    url = f"{URL}/blog/{post.url_slug}"
+    def twitter_share(title, url): return f"https://twitter.com/intent/tweet?text={title}&url={url}"
+    def linkedin_share(title, url): return f"https://www.linkedin.com/sharing/share-offsite/?url={url}"
+    def facebook_share(url): return f"https://www.facebook.com/sharer/sharer.php?u={url}"
     
+    def copy_link(cls=""):
+        return Button(
+            UkIcon("link"), 
+            cls=cls,
+            uk_tooltip="Copy link to clipboard",
+            onclick="navigator.clipboard.writeText(window.location.href); UIkit.notification({message: 'Link copied to clipboard!', pos: 'bottom-right', status: 'success'})"
+        )
+    
+    def ShareAnchor(icon, href, tooltip):
+        return A(UkIcon(icon), href=href, target="_blank", uk_tooltip=tooltip, cls=ButtonT.ghost)
+    
+    social = [
+        ShareAnchor("twitter", twitter_share(post.title, url), "Share on Twitter"),
+        ShareAnchor("linkedin", linkedin_share(post.title, url), "Share on LinkedIn"),
+        ShareAnchor("facebook", facebook_share(url), "Share on Facebook"),
+        copy_link(cls=ButtonT.ghost)
+    ]
+
+    return Div(
+        H4("Share this post", cls=TextPresets.bold_sm + TextT.default + TextT.muted + TextT.secondary),
+        DivHStacked(*social, cls="gap-2"),
+        cls="mt-6"
+    )
+
+def NavButton(post, direction="left"):
+    """Navigation button for previous/next post"""
+    if not post: return Div(cls="flex-1")
+    
+    is_next = direction == "right"
+    icon = UkIcon(f"arrow-{direction}", height=20)
+    text_div = Div(
+        P("Next" if is_next else "Previous", cls=TextPresets.muted_sm),
+        P(post.title, cls=TextPresets.bold_sm),
+        cls="text-right" if is_next else ""
+    )
+    
+    content = DivRAligned(text_div, icon, cls="gap-2") if is_next else DivLAligned(icon, text_div, cls="gap-2")
+    return A(content, href=f"/blog/{post.url_slug}")
+
+def BlogPostHeader(post):
     return Section(
-        # Tags
-        Div(*[Label(tag.strip(), cls=LabelT.secondary) for tag in post.tags.split(',')],
-            cls="flex flex-wrap gap-2 mb-4"),
-        
-        # Title
-        H1(post.title, cls=(TextT.bold, "text-4xl mb-6")),
-        
+        PostTags(post.tags),
+        H1(post.title, cls=(TextT.lg + TextT.muted + TextT.primary, "text-4xl mb-6")),
         DivLAligned(
-            DivLAligned(cls="gap-3")(
-                DiceBearAvatar(post.author_name, h=10, w=10),
-                Div(P(post.author_name, cls=TextPresets.bold_sm), P(post.created_at, cls=TextPresets.muted_sm)),
-            ),
-            
-            # Reading time and views
-            DivLAligned(
-                DivHStacked(UkIcon("clock", height=16), 
-                           P(estimate_read_time(post.content), cls=TextPresets.muted_sm)),
-                DivHStacked(UkIcon("eye", height=16), 
-                           P(f"{post.views} views", cls=TextPresets.muted_sm)),
-                cls="gap-4"
-            ),
+            AuthorInfo("Erik Gaasedelen", post.created_at),
+            PostMetrics(post.views),
             cls="justify-between items-center"
         ),
-        
-        Div(
-            H4("Share this post", cls=TextPresets.bold_sm),
-            DivHStacked(*[Button(UkIcon(icon), cls=ButtonT.ghost) for icon in ["twitter", "linkedin", "facebook", "link"]], cls="gap-2"),
-            cls="mt-6"
-        ),
-        
+        ShareButtons(post),
         DividerSplit(),
         cls="mb-8"
     )
@@ -634,76 +690,22 @@ def BlogPostNavigation(prev_post=None, next_post=None):
     return Section(
         DividerSplit(),
         DivFullySpaced(
-            # Previous post
-            Div(cls="flex-1") if not prev_post else (
-                A(DivLAligned(
-                    UkIcon("arrow-left", height=20),
-                    Div(
-                        P("Previous", cls=TextPresets.muted_sm),
-                        P(prev_post.title, cls=TextPresets.bold_sm)
-                    ),
-                    cls="gap-2"
-                ), href=f"/blog/{prev_post.url_slug}")
-            ),
-            
-            # Back to posts
-            Button(
-                DivLAligned(UkIcon("list"), "All posts"),
-                href="/blog",
-                cls=ButtonT.secondary
-            ),
-            
-            # Next post
-            Div(cls="flex-1") if not next_post else (
-                A(DivRAligned(
-                    Div(
-                        P("Next", cls=TextPresets.muted_sm),
-                        P(next_post.title, cls=TextPresets.bold_sm),
-                        cls="text-right"
-                    ),
-                    UkIcon("arrow-right", height=20),
-                    cls="gap-2"
-                ), href=f"/blog/{next_post.url_slug}")
-            ),
+            NavButton(prev_post, "left"),
+            Button(DivLAligned(UkIcon("list"), "All posts"), 
+                   href="/blog", cls=ButtonT.secondary),
+            NavButton(next_post, "right")
         ),
         cls="mt-12"
     )
 
-def FullBlogPost():
-    # Sample post data
-    post = SimpleNamespace(
-        title="Building a Personal Website with MonsterUI",
-        author_name="Erik Gaasedelen",
-        created_at="July 24, 2024",
-        content="Lorem ipsum " * 1000,  # Long content for scrolling
-        views=142,
-        tags="python,web-development,tutorial",
-        url_slug="building-personal-website-monsterui"
-    )
-    
-    # Sample navigation posts
-    prev_post = SimpleNamespace(
-        title="Introduction to FastAPI",
-        url_slug="intro-to-fastapi"
-    )
-    next_post = SimpleNamespace(
-        title="Advanced Python Tips",
-        url_slug="advanced-python-tips"
-    )
-    
-    sections = [
-        ("Introduction", "introduction"),
-        ("Getting Started", "getting-started"),
-        ("Core Concepts", "core-concepts"),
-        ("Advanced Features", "advanced-features"),
-        ("Best Practices", "best-practices"),
-        ("Conclusion", "conclusion")
-    ]
+def FullBlogPost(post=None, prev_post=None, next_post=None, auth=None, token=None):
+    if post.url_slug == "build-a-personal-blog":
+        content = BuildPersonalSiteBlogPost(auth=auth, token=token)
     
     return Div(
         BlogPostHeader(post),
-        BlogPost(),  # Reusing our previous BlogPost component
-        BlogPostNavigation(prev_post, next_post),
+        content,
+        #BlogPostNavigation(prev_post, next_post),
         cls="container mx-auto max-w-3xl px-4 py-8"
     )
 
@@ -1247,8 +1249,8 @@ def ListProjects(auth=None):
     projects = get_projects()
     return CommonScreen(ProjectPage(projects, auth=auth), auth=auth)
 
-def BlogPostPage(auth=None):
-    return CommonScreen(FullBlogPost(), auth=auth)
+def BlogPostPage(post=None, auth=None, token=None):
+    return CommonScreen(FullBlogPost(post=post, auth=auth, token=token), auth=auth)
 
 def LoginPage(oauth_url, auth=None):
     return CommonScreen(LoginScreen(oauth_url), auth=auth)

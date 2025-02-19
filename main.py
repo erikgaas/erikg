@@ -8,7 +8,7 @@ import dotenv
 
 dotenv.load_dotenv()
 
-hdrs = Theme.blue.headers()
+hdrs = Theme.blue.headers(highlightjs=True)
 
 tailwind_config = """
     <script>
@@ -28,32 +28,45 @@ client = GitHubAppClient(os.getenv("GITHUB_CLIENT_ID"),
                          os.getenv("GITHUB_CLIENT_SECRET"))
 
 class Auth(OAuth):
-    def __init__(self, app, cli, skip=None, redir_path='/redirect', error_path='/error', logout_path='/logout', login_path='/login', https=True, http_patterns=http_patterns):
+    def __init__(self, app, cli, skip=None, redir_path='/redirect', error_path='/error', 
+                 logout_path='/logout', login_path='/login', https=True, http_patterns=http_patterns):
         if not skip: skip = [redir_path,error_path,login_path]
         store_attr()
         def before(req, session):
             auth = req.scope['auth'] = session.get('auth')
             if not auth: return
+            # Also add token to request scope
+            req.scope['token'] = session.get('github_token')
             res = self.check_invalid(req, session, auth)
             if res: return res
         app.before.append(Beforeware(before, skip=skip))
 
         @app.get(redir_path)
         def redirect(req, session, code:str=None, error:str=None, state:str=None):
-            if not code: session['oauth_error']=error; return RedirectResponse(self.error_path, status_code=303)
+            if not code: 
+                session['oauth_error']=error
+                return RedirectResponse(self.error_path, status_code=303)
+            
             scheme = 'http' if url_match(req.url,self.http_patterns) or not self.https else 'https'
             base_url = f"{scheme}://{req.url.netloc}"
             info = AttrDictDefault(cli.retr_info(code, base_url+redir_path))
             ident = info.get(self.cli.id_key)
+            
             if not ident: return self.redir_login(session)
+            
+            # Store the token in session
+            session['github_token'] = cli.token["access_token"]
+            
             res = self.get_auth(info, ident, session, state)
-            if not res:   return self.redir_login(session)
+            if not res: return self.redir_login(session)
+            
             req.scope['auth'] = session['auth'] = ident
             return res
 
         @app.get(logout_path)
         def logout(session):
             session.pop('auth', None)
+            session.pop('github_token', None)  # Clear token on logout
             return self.logout(session)
         
     def get_auth(self, info, ident, session, state):
@@ -77,11 +90,11 @@ def projects(auth):
     return ListProjects(auth=auth)
 
 @rt("/blog/{slug:str}")
-def blogpost(slug:str):
+def blogpost(req, slug:str, auth=None):
     blogpost = get_blog_post(slug)
     if not blogpost: return RedirectResponse("/blogposts", status_code=303)
     add_blog_view(slug)
-    if slug == "build-a-personal-blog": return BlogPostPage()
+    return BlogPostPage(post=blogpost, auth=auth, token=req.scope.get('token'))
 
 
 @rt("/login")
