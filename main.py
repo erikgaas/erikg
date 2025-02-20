@@ -204,9 +204,10 @@ async def admin_login(request, session):
     form = await request.form()
     password = form.get('password')
     
+    print('hihih', os.getenv('ADMIN_PASSWORD'))
     if password == os.getenv('ADMIN_PASSWORD'):
         session['admin_access'] = True
-        return AdminPage(session)  # Return full admin page
+        return AdminPage(session)
     else:
         return Alert(
             DivLAligned(
