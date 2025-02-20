@@ -21,7 +21,7 @@ def sign_in(info):
     users = db.t.user
     user = users(where="github_id=?", where_args=(info['id'],))
     if user: return update_sign_in_latest(user[0])
-    else:    return create_user_from_github(info, db)
+    else:    return create_user_from_github(info)
 
 def get_user(auth):
     users = db.t.user
