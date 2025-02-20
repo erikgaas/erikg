@@ -97,109 +97,122 @@ def GithubInsights(auth=None, token=None):
 def BuildPersonalSiteBlogPost(auth=None, token=None):
     sections = [
         ("Making solo webapp development possible", "intro"),
-        ("Removing Barriers", "barriers"),
+        ("Reducing Integration Costs", "integration"),
+        ("The Power of HTMX", "htmx"),
+        ("Styling with MonsterUI", "styling"),
         ("Truly Dynamic Content", "dynamic"),
         ("Resources and Getting Started", "resources")
     ]
     
     intro = Section(
         H1("Making solo webapp development possible", cls=(TextT.lg + TextT.muted + TextT.primary, "text-3xl mb-6")),
-        PY("I've never been as productive building a webapp as I am now. This entire blog runs on my personal site, built with FastHTML and MonsterUI. I've tried many leading frontend frameworks over the years, only to get bogged down by their complexity."),
+        PY("If you're like me, you have a graveyard of personal projects that you started but never finished. It's not the end of the world—I've learned a lot from unfinished work—but it's not always satisfying. Recently, I wanted to change that, so I dove deep into React, FastAPI, AWS, and Terraform. Again, I learned a ton, but touching every part of a full-stack app meant that nothing was great, especially web styling. I can try to learn flexbox over and over, yet it never seems to stick in my brain."),
         Br(),
-        PY("Before this, my go-to stack was FastAPI and React—yet even adding a third-party OAuth login felt like an all-day affair. The tools themselves are powerful; it's the sprawling ecosystems that overwhelmed me as a solo developer wanting a full-featured app: database, business logic, and a customizable UI."),
+        PY("Full-stack development with this stack also takes forever. I remember spending five hours just figuring out how to implement third-party OAuth sign-in. Fortunately, there's a much better way, and I'm very excited to share it with you."),
         Br(),
-        PY("Then I discovered FastHTML and MonsterUI. Yes, they're more frameworks you might not have heard of—but here's why they're worth a look. Simply put, this site is the first time I've built exactly what I envisioned: it has databases, authentication, contact forms, mobile responsiveness, and theme support. Getting here with other stacks took far too much time, if it ever happened at all. Now, I'm excited to share how straightforward it can be once you have the right tools in hand. If I can do this, so can you."),
+        PY("This entire site is built with FastHTML and MonsterUI—two relatively new libraries that make full-stack web app development a breeze. Take this site as an example: it has a database, authentication, contact forms, mobile responsiveness, and light/dark mode—far more than I ever dreamed of implementing in my own project. And, of course, blog support!"),
+        Br(),
+        PY("It still required effort, but I built all of this in about two weeks of evening work and some weekend free time. I shouldn't have been able to make something like this myself in such a short period. 😄 If I can do it, you can too. There's so much to cover, but let's start with a high-level look at what FastHTML and MonsterUI are and why they make me so much more productive."),
         id="intro",
         cls="mb-12"
     )
     
-    barriers = Section(
-        H2("Removing Barriers", cls=(TextT.lg + TextT.muted + TextT.primary, "text-2xl mb-4")),
-        PY("What does a \"barrier\" look like in practice? Let's walk through a simple scenario—displaying blog post cards—to see how FastHTML compares to a standard FastAPI and React setup."),
-        Br(),
-        PY("Consider a basic example: displaying blog post cards. With FastAPI, you typically write an endpoint returning JSON:"),
+    integration = Section(
+        H2("Reducing Integration Costs", cls=(TextT.lg + TextT.muted + TextT.primary, "text-2xl mb-4")),
+        PY("On my front page, you can see cards displaying the latest blog posts. These query the database and fill in relevant information. In FastAPI, you would typically do something like this to return JSON:"),
         CodeBlock("""@app.get("/api/blogs")
-    async def get_blogs():
-        return [
-            {
-                "title": "Making solo webapp development possible",
-                "description": "Building modern web apps without the complexity...",
-                "created_at": "2024-01-20T10:00:00",
-                "views": 142,
-                "tags": ["python", "web-development", "tutorial"]
-            }
-            # ... more blog posts
-        ]""", language="python"),
-        PY("Then you'd transform that JSON into HTML in React:"),
+async def get_blogs():
+    return [
+        {
+            "title": "Making solo webapp development possible",
+            "description": "Building modern web apps without the complexity...",
+            "created_at": "2024-01-20T10:00:00",
+            "views": 142,
+            "tags": ["python", "web-development", "tutorial"]
+        }
+        # ... more blog posts
+    ]""", language="python"),
+        PY("A React app would then consume this JSON payload and transform it into HTML:"),
         CodeBlock("""function BlogCard({ blog }) {
-    return (
-        <div className="card">
-        <h3>{blog.title}</h3>
-        <p>{blog.description}</p>
-        <div className="metadata">
-            <span>{formatDate(blog.created_at)}</span>
-            <span>{blog.views} views</span>
-        </div>
-        <div className="tags">
-            {blog.tags.map((tag) => (
-            <span key={tag} className="tag">
-                {tag}
-            </span>
-            ))}
-        </div>
-        </div>
-    );
-    }
-
-    function BlogList() {
-    const [blogs, setBlogs] = useState([]);
-
-    useEffect(() => {
-        fetch("/api/blogs")
-        .then((res) => res.json())
-        .then((data) => setBlogs(data));
-    }, []);
-
-    return (
-        <div className="blog-grid">
-        {blogs.map((blog) => (
-            <BlogCard key={blog.id} blog={blog} />
+  return (
+    <div className="card">
+      <h3>{blog.title}</h3>
+      <p>{blog.description}</p>
+      <div className="metadata">
+        <span>{formatDate(blog.created_at)}</span>
+        <span>{blog.views} views</span>
+      </div>
+      <div className="tags">
+        {blog.tags.map((tag) => (
+          <span key={tag} className="tag">
+            {tag}
+          </span>
         ))}
-        </div>
-    );
-    }""", code_cls="language-javascript"),
-        PY("With FastHTML, you skip the JSON step and directly return styled HTML:"),
+      </div>
+    </div>
+  );
+}""", code_cls="language-javascript"),
+        PY("But what if you could skip this conversion step and return the HTML directly? That's exactly what FastHTML does:"),
         CodeBlock("""@rt("/blogposts")
-    def blogs(auth):
-        posts = get_blog_posts()
-        return Div(
-            *[BlogCard(blog) for blog in posts],
-            cls="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        )
+def blogs(auth):
+    posts = get_blog_posts()
+    return Div(
+        *[BlogCard(blog) for blog in posts],
+        cls="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+    )
 
-    def BlogCard(blog):
-        return Card(
-            PostTags(blog.tags),
-            H3(blog.title, cls=TextT.bold),
-            P(blog.description, cls=TextPresets.muted_sm),
-            DivLAligned(
-                PostMetrics(blog.content, blog.views),
-                cls="justify-between items-center"
-            ),
-            cls=CardT.hover + CardT.secondary
-        )""", language="python"),
-        PY("Combined with HTMX, FastHTML can serve a full page or just the snippet needed to update an existing page section. Whether you're loading more posts or filtering by tag, FastHTML returns new cards on demand—no JSON conversion, no separate state management, no extra styling system. You simply define the HTML in Python and let HTMX slot it right into place."),
-        id="barriers",
+def BlogCard(blog):
+    return Card(
+        PostTags(blog.tags),
+        H3(blog.title, cls=TextT.bold),
+        P(blog.description, cls=TextPresets.muted_sm),
+        DivLAligned(
+            PostMetrics(blog.content, blog.views),
+            cls="justify-between items-center"
+        ),
+        cls=CardT.hover + CardT.secondary
+    )""", language="python"),
+        PY("Notice how conveniently DOM elements map to Python classes. In the blogs router, I query the database and feed the posts directly into BlogCard objects using list comprehension. Since components are just Python functions, my code is far more modular and, in my opinion, easier to maintain."),
+        id="integration",
+        cls="mb-12"
+    )
+
+    htmx = Section(
+        H2("The Power of HTMX", cls=(TextT.lg + TextT.muted + TextT.primary, "text-2xl mb-4")),
+        PY("The secret sauce behind FastHTML is HTMX. If you looked at the code above and wondered, \"What happens when these DOM elements are returned from a router?\"—the answer is HTMX. This library allows DOM elements to make HTTP requests to these endpoints and decide how to handle the returned data (e.g., replacing elements, adding children, etc.)."),
+        Br(),
+        PY("I've also noticed that all my state management naturally ends up in backend code, making it much easier to track. React often tripped me up when state became too complex to handle effectively."),
+        id="htmx",
+        cls="mb-12"
+    )
+    
+    styling = Section(
+        H2("Styling with MonsterUI", cls=(TextT.lg + TextT.muted + TextT.primary, "text-2xl mb-4")),
+        PY("One of the biggest challenges in web development is creating a polished, professional-looking UI. MonsterUI solves this by providing a comprehensive set of pre-styled components that work seamlessly with FastHTML."),
+        Br(),
+        PY("Instead of wrestling with CSS classes and flexbox layouts, you can focus on composition. Here's a simple example of creating a card with MonsterUI:"),
+        CodeBlock("""def UserProfile(user):
+    return Card(
+        DivLAligned(
+            Avatar(user.image),
+            H3(user.name, cls=TextT.bold),
+            cls="gap-4"
+        ),
+        P(user.bio, cls=TextPresets.muted_sm),
+        cls=CardT.hover
+    )""", language="python"),
+        PY("Notice how the styling is declarative and semantic. Instead of remembering CSS class combinations, you use preset styles like CardT.hover or TextPresets.muted_sm. These presets are carefully designed to work together, ensuring consistent spacing, typography, and interactions across your application."),
+        Br(),
+        PY("MonsterUI also handles responsive design automatically. Components like Grid and DivLAligned adapt to different screen sizes without requiring complex media queries. This means you can build mobile-friendly layouts with minimal effort."),
+        id="styling",
         cls="mb-12"
     )
     
     dynamic = Section(
         H2("Truly Dynamic Content", cls=(TextT.lg + TextT.muted + TextT.primary, "text-2xl mb-4")),
-        PY("\"Why not just use Medium or another blogging platform?\" They do handle plenty of complexity, but they also limit your options. With FastHTML, you can add truly interactive components that go beyond any preset template."),
+        PY("One thing I love about FastHTML and MonsterUI is that I can create a blog without any limitations. I can publish text, but I can also embed whatever DOM elements I want. Here’s an example I made just for this post: if you log in to my site with GitHub, you’ll be able to see a GitHub insights component customized to your profile!"),
         Br(),
-        PY("For example, I recently added a dynamic GitHub insights panel to my posts. It's not just static text—it queries GitHub live and returns up-to-date information. Try doing that on Medium! Because FastHTML lets you embed any custom component, you can drop in code playgrounds, real-time data visualizations, or personalized recommendations right alongside your written content."),
-        Br(),
-        PY("That's where FastHTML really shines: it's not just about making simple development easier, but about bringing once-complex features within reach. The same component system that handles basic blog posts can also power complex, dynamic, authenticated content without getting in your way."),
+        PY("A traditional blogging platform would never allow that! The opportunities are limitless—code playgrounds, real-time dashboards, recommendation systems—whatever you can dream up. This is another reason I’m so excited about these libraries. In less time, I can do significantly more than I ever could with pure blogging frameworks."),
         id="dynamic",
         cls="mb-12"
     )
@@ -252,7 +265,7 @@ def BuildPersonalSiteBlogPost(auth=None, token=None):
     
     gh_integration = GithubInsights(auth=auth, token=token)
     
-    content = Div(intro, barriers, dynamic, gh_integration, resources, cls="prose max-w-none")
+    content = Div(intro, integration, htmx, styling, dynamic, gh_integration, resources, cls="prose max-w-none")
     
     return Div(
         TableOfContents(sections),

@@ -1,12 +1,16 @@
 ## Making solo webapp development possible
 
-If you're like me, you have a graveyard of personal projects that you have started and never finished. It's not the end of the world, I've learned a lot from unfinished work, but it's not always satisfying. Lately I wanted to change that so I went deep into React, FastAPI, AWS, and Terraform. Again, I learned a ton, but touching all parts of the fullstack app means that nothing is great. Especially for web styling. I can try to learn flexbox over and over and still not have it stick in my brain. And fullstack development with this stack takes forever. I remember it took me 5 hours to figure out how to use 3rd party Oauth sign in. Fortunately there is a much better way and I'm very excited to share it with you.
+If you're like me, you have a graveyard of personal projects that you started but never finished. It’s not the end of the world—I've learned a lot from unfinished work—but it’s not always satisfying. Recently, I wanted to change that, so I dove deep into React, FastAPI, AWS, and Terraform. Again, I learned a ton, but touching every part of a full-stack app meant that nothing was great, especially web styling. I can try to learn flexbox over and over, yet it never seems to stick in my brain.
 
-This whole site is built with FastHTML and MonsterUI. They are quite new libraries and they make making a fullstack webapp a breeze. Take this site as an example. It has a database, authentication, contact forms, mobile responsiveness, and light/dark mode. Far more than I would ever dreamed being able to put into my own site. And of course blog support! It was still a chunk of work but this took me about two weeks of evening work and some weekend free time. I shouldn't be able to make something like this myself in such a short amount of time. 😄 If I can do it you can too. There is so much to go over, but allow me to talk high level about what FastHTML and MonsterUI are and why they make me so much more productive.
+Full-stack development with this stack also takes forever. I remember spending five hours just figuring out how to implement third-party OAuth sign-in. Fortunately, there’s a much better way, and I’m very excited to share it with you.
+
+This entire site is built with FastHTML and MonsterUI—two relatively new libraries that make full-stack web app development a breeze. Take this site as an example: it has a database, authentication, contact forms, mobile responsiveness, and light/dark mode—far more than I ever dreamed of implementing in my own project. And, of course, blog support!
+
+It still required effort, but I built all of this in about two weeks of evening work and some weekend free time. I shouldn't have been able to make something like this myself in such a short period. 😄 If I can do it, you can too. There’s so much to cover, but let’s start with a high-level look at what FastHTML and MonsterUI are and why they make me so much more productive.
 
 ## Reducing Integration Costs
 
-On my front page you can see cards which show the latest blog posts. This queries the database and fills in the relevant information. In FastAPI you would do something like this and it would return JSON to you:
+On my front page, you can see cards displaying the latest blog posts. These query the database and fill in relevant information. In FastAPI, you would typically do something like this to return JSON:
 
 ```python
 @app.get("/api/blogs")
@@ -23,7 +27,7 @@ async def get_blogs():
     ]
 ```
 
-A React app would consume this JSON payload and transform it into your desired HTML code.
+A React app would then consume this JSON payload and transform it into HTML:
 
 ```js
 function BlogCard({ blog }) {
@@ -47,7 +51,7 @@ function BlogCard({ blog }) {
 }
 ```
 
-But what if you could just skip all this conversion step and return the HTML directly. This is exactly what FastHTML does:
+But what if you could skip this conversion step and return the HTML directly? That’s exactly what FastHTML does:
 
 ```python
 @rt("/blogposts")
@@ -71,15 +75,17 @@ def BlogCard(blog):
     )
 ```
 
-Notice how conveniently DOM elements map to Python classes. In the blogposts router I can perform the DB query and then feed the posts directly into BlogCard objects using a python list comprehension. Given that components are just Python functions, my code can be way more modular and, in my opinion, easier to maintain.
+Notice how conveniently DOM elements map to Python classes. In the blogs router, I query the database and feed the posts directly into BlogCard objects using list comprehension. Since components are just Python functions, my code is far more modular and, in my opinion, easier to maintain.
 
-There is way more that should be covered, but for now I'll leave you with this: the secret sauce for FastHTML is HTMX. You may have looked at the above code and wondered "What does it mean to just return some DOM element fragments in a router? Where does it go?" It is the HTMX library which allows DOM elements themselves to make HTTP requests to these endpoints and then choose what to do with the result when they are returned. For example a DOM fragment could replace an element, be added to children, as a parent, etc.
+## The Power of HTMX
 
-I've noticed also that all my state management seems to wind up in "backend" code making it much easier for me to track. React would consistently trip me up when state would become too complex for me to handle.
+The secret sauce behind FastHTML is HTMX. If you looked at the code above and wondered, “What happens when these DOM elements are returned from a router?”—the answer is HTMX. This library allows DOM elements to make HTTP requests to these endpoints and decide how to handle the returned data (e.g., replacing elements, adding children, etc.).
+
+I've also noticed that all my state management naturally ends up in backend code, making it much easier to track. React often tripped me up when state became too complex to handle effectively.
 
 ## Styling with MonsterUI
 
-MonsterUI is like a CSS component library for FastHTML. Under the hood it leverages DaisyUI, FrankenUI, and TailwindCSS. "Card" for example is class written in MonsterUI and its sourcecode looks like this:
+MonsterUI is a CSS component library for FastHTML. Under the hood, it leverages DaisyUI, FrankenUI, and TailwindCSS. For example, the Card component in MonsterUI is implemented as follows:
 
 ```python
 def Card(*c, # Components that go in the body (Main content of the card such as a form, and image, a signin form, etc.)
@@ -100,7 +106,7 @@ def Card(*c, # Components that go in the body (Main content of the card such as 
     return CardContainer(cls=cls, **kwargs)(*res)
 ```
 
-I use Card all over the place in this site. You can see them on the homepage and the blog and projects page. For example here is how I created my BlogCard:
+I use Card throughout this site, including the homepage, blog, and projects page. Here’s how I created my BlogCard component:
 
 ```python
 def BlogCard(blog):
@@ -120,13 +126,11 @@ def BlogCard(blog):
     return Card(image_section, content_section, cls=(CardT.hover + CardT.secondary, "max-w-sm"))
 ```
 
-Those familiar with Tailwind will see the CSS classes sprinkled in this code. You can also see how easy it is to modularize code into different variables. I could certainly improve this, but if you start with the return Card statement, it is easy to relate what the Card looks like to the code behind it.
-
 ## Truly Dynamic Content
 
-One thing I love about FastHTML and MonsterUI is I can create a blog without any limitations. I can publish text, but I can also add in whatever DOM elements I want. Here's an example I made just for this post. If you login to my site with GitHub you will be logged in and be able to see this GitHub insights component customized to your profile!
+One thing I love about FastHTML and MonsterUI is that I can create a blog without any limitations. I can publish text, but I can also embed whatever DOM elements I want. Here’s an example I made just for this post: if you log in to my site with GitHub, you’ll be able to see a GitHub insights component customized to your profile!
 
-Medium would never be able to do that! The opportunities ar limitless. Code playgrounds, real time dashboards, recommendation systems, whatever you can come up with. This is another reason I'm so excited about these libraries. In less time I can do significantly more than what I was able to do in pure blogging frameworks.
+A traditional blogging platform would never allow that! The opportunities are limitless—code playgrounds, real-time dashboards, recommendation systems—whatever you can dream up. This is another reason I’m so excited about these libraries. In less time, I can do significantly more than I ever could with pure blogging frameworks.
 
 ## Resources and Getting Started
 

@@ -717,7 +717,7 @@ def LoginScreen(oauth_url):
         # Add a small brand icon above the title
         UkIcon("code", height=40, width=40, cls="text-primary mb-4"),
         H2("Welcome", cls=(TextT.bold, TextT.primary, "text-3xl")),
-        P("Sign in to access interactive features and comments", 
+        P("Sign in to access interactive features", 
           cls=(TextPresets.muted_sm, "max-w-sm text-center")),
         cls="space-y-2 mb-8"
     )
