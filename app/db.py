@@ -15,7 +15,7 @@ class Blog:
     author_id: int   # Foreign key to User table
     views: int       # Track post popularity
     tags: str        # Store comma-separated tags to categorize posts
- 
+
 class Project:
     id: int
     title: str
