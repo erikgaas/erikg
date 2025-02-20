@@ -1220,6 +1220,110 @@ def NewBlogModal():
         id="new-blog-modal"
     )
 
+def AdminLoginForm():
+    return Card(
+        H3("Admin Access", cls=(TextPresets.bold_sm, "mb-4 text-zinc-800 dark:text-zinc-200")),
+        Form(
+            P("Enter admin password to continue:", 
+              cls="text-zinc-700 dark:text-zinc-300 mb-4"),
+            DivLAligned(
+                UkIcon("lock", height=20, cls="text-zinc-500"),
+                Input(
+                    type="password",
+                    name="password",
+                    placeholder="Admin password",
+                    cls="flex-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md px-3 py-2"
+                ),
+                cls="gap-2 w-full"
+            ),
+            Button(
+                "Access Admin Panel",
+                cls=(ButtonT.primary, "w-full mt-4")
+            ),
+            hx_post="/admin/login",
+            hx_target="#admin-content"
+        ),
+        cls="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 max-w-md mx-auto"
+    )
+
+def AdminPage(session, auth=None):
+    if not auth or (not get_user(auth).is_admin and not session.get('admin_access')):
+        return Div(
+            H1("Admin Dashboard", 
+               cls=(TextT.bold, "text-3xl mb-6 text-zinc-900 dark:text-white")),
+            AdminLoginForm(),
+            id="admin-content",
+            cls="container mx-auto max-w-4xl p-4"
+        )
+    
+    db_files = [
+        ("Database", "personal_site.sqlite"),
+        ("Write-Ahead Log", "personal_site.sqlite-wal"),
+        ("Shared Memory File", "personal_site.sqlite-shm")
+    ]
+    
+    download_buttons = [
+        DivLAligned(
+            UkIcon(
+                "database" if name == "Database" else "file", 
+                height=20, 
+                cls="text-blue-500 dark:text-blue-400"
+            ),
+            A(
+                f"Download {name}", 
+                href=f"/admin/download/{filename}",
+                cls="inline-flex items-center px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-sm font-medium text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+            ),
+            cls="gap-3"
+        ) for name, filename in db_files
+    ]
+
+    upload_form = Form(
+        P("Upload database files:", cls="text-zinc-700 dark:text-zinc-300 mb-2"),
+        Input(
+            type="file",
+            name="database",
+            multiple=True,
+            accept=".sqlite,.sqlite-wal,.sqlite-shm",
+            cls="mb-4 text-zinc-700 dark:text-zinc-300"
+        ),
+        Button(
+            DivLAligned(
+                UkIcon("upload", height=20),
+                "Upload Files",
+                Loading(cls=(LoadingT.spinner + LoadingT.sm, "ml-2"), htmx_indicator=True)
+            ),
+            cls=(ButtonT.primary, "mt-2")
+        ),
+        hx_post="/admin/upload",
+        hx_encoding="multipart/form-data",
+        hx_target="#upload-result"
+    )
+
+    return Div(
+        H1("Admin Dashboard", 
+           cls=(TextT.bold, "text-3xl mb-6 text-zinc-900 dark:text-white")),
+        Grid(
+            Card(
+                H3("Database Management", 
+                   cls=(TextPresets.bold_sm, "mb-4 text-zinc-800 dark:text-zinc-200")),
+                Div(*download_buttons, cls="space-y-4"),
+                cls="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800"
+            ),
+            Card(
+                H3("Upload Database", 
+                   cls=(TextPresets.bold_sm, "mb-4 text-zinc-800 dark:text-zinc-200")),
+                upload_form,
+                Div(id="upload-result"),
+                cls="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800"
+            ),
+            cols=1,
+            gap=6
+        ),
+        cls="container mx-auto max-w-4xl p-4"
+    )
+
+
 
 def CommonScreen(*c, auth=None):
     user = get_user(auth)

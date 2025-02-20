@@ -66,8 +66,9 @@ class Auth(OAuth):
         @app.get(logout_path)
         def logout(session):
             session.pop('auth', None)
-            session.pop('github_token', None)  # Clear token on logout
-            return self.logout(session)
+            session.pop('github_token', None)
+            session.pop('admin_access', None)  # Clear admin access
+            return RedirectResponse('/login', status_code=303)
         
     def get_auth(self, info, ident, session, state):
         sign_in(info)
@@ -148,5 +149,71 @@ def delete(id: int):
 def toggle(id: int):
     request = mark_contact_request_responded(id)
     return ContactRequestCard(request)
+
+@rt("/admin")
+def admin(session,auth=None):
+    return AdminPage(session, auth)
+
+@rt("/admin/download/{filename:str}")
+def download_db_file(filename: str, auth=None, session=None):
+    if (not auth or not get_user(auth).is_admin) and not session.get('admin_access'):
+        return RedirectResponse("/", status_code=303)
+
+    try:
+        return FileResponse(
+            filename,
+            filename=filename,
+            media_type="application/octet-stream"
+        )
+    except FileNotFoundError:
+        return RedirectResponse("/admin?error=file-not-found", status_code=303)
+    
+@rt("/admin/upload")
+async def upload_database(request, auth=None, session=None):
+    if (not auth or not get_user(auth).is_admin) and not session.get('admin_access'):
+        return RedirectResponse("/", status_code=303)
+    
+    form = await request.form()
+    files = form.getlist('database')
+    
+    try:
+        for file in files:
+            if not isinstance(file, UploadFile): continue
+            content = await file.read()
+            with open(file.filename, 'wb') as f:
+                f.write(content)
+        
+        return Alert(
+            DivLAligned(
+                UkIcon("check-circle"),
+                P("Database files uploaded successfully!", cls="text-white")
+            ),
+            cls=AlertT.success
+        )
+    except Exception as e:
+        return Alert(
+            DivLAligned(
+                UkIcon("alert-triangle"),
+                P(f"Error uploading files: {str(e)}", cls="text-white")
+            ),
+            cls=AlertT.error
+        )
+    
+@rt("/admin/login")
+async def admin_login(request, session):
+    form = await request.form()
+    password = form.get('password')
+    
+    if password == os.getenv('ADMIN_PASSWORD'):
+        session['admin_access'] = True
+        return AdminPage(session)  # Return full admin page
+    else:
+        return Alert(
+            DivLAligned(
+                UkIcon("x-circle"),
+                P("Invalid admin password", cls="text-white")
+            ),
+            cls=AlertT.error
+        )
 
 serve()
