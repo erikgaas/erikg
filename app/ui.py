@@ -1248,7 +1248,6 @@ def AdminLoginForm():
 
 def AdminPage(session, auth=None):
     has_admin_rights = (auth and get_user(auth).is_admin) or session.get('admin_access')
-    print(session.get('admin_access'))
     if not has_admin_rights:
         return Div(
             H1("Admin Dashboard", 
