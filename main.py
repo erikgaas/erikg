@@ -204,7 +204,7 @@ async def admin_login(request, session):
     form = await request.form()
     password = form.get('password')
     
-    print('hihih', os.getenv('RAILWAY_PUBLIC_DOMAIN'))
+    print('hihih', os.getenv('FOOBAR'))
     if password == os.getenv('ADMIN_PASSWORD'):
         session['admin_access'] = True
         return AdminPage(session)
